@@ -2,231 +2,21 @@
 import { createClient } from '@supabase/supabase-js';
 
 // These will be set from environment variables
-const supabaseUrl = process.env.REACT_APP_SUPABASE_URL || '';
-const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY || '';
+const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
+const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Only create Supabase client if credentials exist
+export const supabase = supabaseUrl && supabaseAnonKey 
+  ? createClient(supabaseUrl, supabaseAnonKey)
+  : null;
 
-// ============================================
-// ATHLETE FUNCTIONS
-// ============================================
-
-export const getAthletes = async () => {
-  const { data, error } = await supabase
-    .from('athletes')
-    .select('*')
-    .order('created_at', { ascending: false });
-  
-  if (error) throw error;
-  return data;
-};
-
-export const getAthleteById = async (id) => {
-  const { data, error } = await supabase
-    .from('athletes')
-    .select('*')
-    .eq('id', id)
-    .single();
-  
-  if (error) throw error;
-  return data;
-};
-
-export const createAthlete = async (athlete) => {
-  const { data, error } = await supabase
-    .from('athletes')
-    .insert([athlete])
-    .select()
-    .single();
-  
-  if (error) throw error;
-  return data;
-};
-
-export const updateAthlete = async (id, updates) => {
-  const { data, error } = await supabase
-    .from('athletes')
-    .update(updates)
-    .eq('id', id)
-    .select()
-    .single();
-  
-  if (error) throw error;
-  return data;
-};
-
-export const deleteAthlete = async (id) => {
-  const { error } = await supabase
-    .from('athletes')
-    .delete()
-    .eq('id', id);
-  
-  if (error) throw error;
+// Check if Supabase is configured
+export const isSupabaseConfigured = () => {
+  return supabase !== null;
 };
 
 // ============================================
-// MEAL PLAN FUNCTIONS
-// ============================================
-
-export const getMealPlans = async (athleteId = null) => {
-  let query = supabase
-    .from('meal_plans')
-    .select('*')
-    .order('created_at', { ascending: false });
-  
-  if (athleteId) {
-    query = query.eq('athlete_id', athleteId);
-  }
-  
-  const { data, error } = await query;
-  if (error) throw error;
-  return data;
-};
-
-export const getMealPlanById = async (id) => {
-  const { data, error } = await supabase
-    .from('meal_plans')
-    .select('*')
-    .eq('id', id)
-    .single();
-  
-  if (error) throw error;
-  return data;
-};
-
-export const createMealPlan = async (plan) => {
-  const { data, error } = await supabase
-    .from('meal_plans')
-    .insert([plan])
-    .select()
-    .single();
-  
-  if (error) throw error;
-  return data;
-};
-
-export const updateMealPlan = async (id, updates) => {
-  const { data, error } = await supabase
-    .from('meal_plans')
-    .update(updates)
-    .eq('id', id)
-    .select()
-    .single();
-  
-  if (error) throw error;
-  return data;
-};
-
-export const deleteMealPlan = async (id) => {
-  const { error } = await supabase
-    .from('meal_plans')
-    .delete()
-    .eq('id', id);
-  
-  if (error) throw error;
-};
-
-// ============================================
-// WEIGHT LOG FUNCTIONS
-// ============================================
-
-export const getWeightLogs = async (athleteId) => {
-  const { data, error } = await supabase
-    .from('weight_logs')
-    .select('*')
-    .eq('athlete_id', athleteId)
-    .order('logged_at', { ascending: false });
-  
-  if (error) throw error;
-  return data;
-};
-
-export const addWeightLog = async (athleteId, weight, notes = '') => {
-  const { data, error } = await supabase
-    .from('weight_logs')
-    .insert([{
-      athlete_id: athleteId,
-      weight,
-      notes,
-      logged_at: new Date().toISOString()
-    }])
-    .select()
-    .single();
-  
-  if (error) throw error;
-  return data;
-};
-
-// ============================================
-// SAVED MEAL TEMPLATE FUNCTIONS
-// ============================================
-
-export const getSavedMeals = async () => {
-  const { data, error } = await supabase
-    .from('saved_meals')
-    .select('*')
-    .order('name');
-  
-  if (error) throw error;
-  return data;
-};
-
-export const createSavedMeal = async (meal) => {
-  const { data, error } = await supabase
-    .from('saved_meals')
-    .insert([meal])
-    .select()
-    .single();
-  
-  if (error) throw error;
-  return data;
-};
-
-export const deleteSavedMeal = async (id) => {
-  const { error } = await supabase
-    .from('saved_meals')
-    .delete()
-    .eq('id', id);
-  
-  if (error) throw error;
-};
-
-// ============================================
-// CUSTOM FOODS FUNCTIONS
-// ============================================
-
-export const getCustomFoods = async () => {
-  const { data, error } = await supabase
-    .from('custom_foods')
-    .select('*')
-    .order('name');
-  
-  if (error) throw error;
-  return data;
-};
-
-export const createCustomFood = async (food) => {
-  const { data, error } = await supabase
-    .from('custom_foods')
-    .insert([food])
-    .select()
-    .single();
-  
-  if (error) throw error;
-  return data;
-};
-
-export const deleteCustomFood = async (id) => {
-  const { error } = await supabase
-    .from('custom_foods')
-    .delete()
-    .eq('id', id);
-  
-  if (error) throw error;
-};
-
-// ============================================
-// LOCAL STORAGE FALLBACK (for development without Supabase)
+// LOCAL STORAGE FALLBACK
 // ============================================
 
 const LOCAL_STORAGE_KEYS = {
@@ -237,7 +27,6 @@ const LOCAL_STORAGE_KEYS = {
 };
 
 export const localDB = {
-  // Athletes
   getAthletes: () => {
     const data = localStorage.getItem(LOCAL_STORAGE_KEYS.athletes);
     return data ? JSON.parse(data) : [];
@@ -271,7 +60,6 @@ export const localDB = {
     localDB.saveAthletes(athletes);
   },
   
-  // Meal Plans
   getMealPlans: (athleteId = null) => {
     const data = localStorage.getItem(LOCAL_STORAGE_KEYS.mealPlans);
     let plans = data ? JSON.parse(data) : [];
@@ -309,7 +97,6 @@ export const localDB = {
     localDB.saveMealPlans(plans);
   },
   
-  // Saved Meals
   getSavedMeals: () => {
     const data = localStorage.getItem(LOCAL_STORAGE_KEYS.savedMeals);
     return data ? JSON.parse(data) : [];
@@ -332,7 +119,6 @@ export const localDB = {
     localDB.saveSavedMeals(meals);
   },
   
-  // Custom Foods
   getCustomFoods: () => {
     const data = localStorage.getItem(LOCAL_STORAGE_KEYS.customFoods);
     return data ? JSON.parse(data) : [];
@@ -354,9 +140,4 @@ export const localDB = {
     const foods = localDB.getCustomFoods().filter(f => f.id !== id);
     localDB.saveCustomFoods(foods);
   },
-};
-
-// Check if Supabase is configured
-export const isSupabaseConfigured = () => {
-  return supabaseUrl && supabaseAnonKey;
 };
