@@ -1,23 +1,4 @@
-// Supabase configuration and database helpers
-import { createClient } from '@supabase/supabase-js';
-
-// These will be set from environment variables
-const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
-const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
-
-// Only create Supabase client if credentials exist
-export const supabase = supabaseUrl && supabaseAnonKey 
-  ? createClient(supabaseUrl, supabaseAnonKey)
-  : null;
-
-// Check if Supabase is configured
-export const isSupabaseConfigured = () => {
-  return supabase !== null;
-};
-
-// ============================================
-// LOCAL STORAGE FALLBACK
-// ============================================
+// Local Storage Database - No Supabase Required
 
 const LOCAL_STORAGE_KEYS = {
   athletes: 'cf_athletes',
@@ -141,3 +122,6 @@ export const localDB = {
     localDB.saveCustomFoods(foods);
   },
 };
+
+export const isSupabaseConfigured = () => false;
+export const supabase = null;
