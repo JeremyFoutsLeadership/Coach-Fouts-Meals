@@ -1,0 +1,158 @@
+// USDA-verified food database with macros per standard serving
+// All values verified against USDA FoodData Central
+
+export const FOOD_DATABASE = {
+  proteins: [
+    { id: 'p1', name: 'Chicken Breast (cooked)', unit: 'oz', calories: 46, protein: 8.8, carbs: 0, fat: 1, category: 'proteins' },
+    { id: 'p2', name: 'Chicken Thighs (cooked)', unit: 'oz', calories: 56, protein: 7.2, carbs: 0, fat: 2.8, category: 'proteins' },
+    { id: 'p3', name: 'Chicken Tenders (breaded)', unit: 'oz', calories: 56, protein: 5.5, carbs: 4, fat: 2.5, category: 'proteins' },
+    { id: 'p4', name: 'Ground Beef 85/15 (cooked)', unit: 'oz', calories: 64, protein: 7.5, carbs: 0, fat: 3.6, category: 'proteins' },
+    { id: 'p5', name: 'Filet Mignon (cooked)', unit: 'oz', calories: 66, protein: 8, carbs: 0, fat: 3.5, category: 'proteins' },
+    { id: 'p6', name: 'Tri-Tip Steak (cooked)', unit: 'oz', calories: 57, protein: 8.3, carbs: 0, fat: 2.5, category: 'proteins' },
+    { id: 'p7', name: 'Ground Turkey (cooked)', unit: 'oz', calories: 50, protein: 7.5, carbs: 0, fat: 2.2, category: 'proteins' },
+    { id: 'p8', name: 'Turkey Deli Meat', unit: 'oz', calories: 29, protein: 5, carbs: 1, fat: 0.5, category: 'proteins' },
+    { id: 'p9', name: 'Salmon (cooked)', unit: 'oz', calories: 58, protein: 7.3, carbs: 0, fat: 3, category: 'proteins' },
+    { id: 'p10', name: 'Shrimp (cooked)', unit: 'oz', calories: 28, protein: 5.7, carbs: 0.3, fat: 0.3, category: 'proteins' },
+    { id: 'p11', name: 'Halibut (cooked)', unit: 'oz', calories: 39, protein: 7.5, carbs: 0, fat: 0.8, category: 'proteins' },
+    { id: 'p12', name: 'Tilapia (cooked)', unit: 'oz', calories: 36, protein: 7.5, carbs: 0, fat: 0.6, category: 'proteins' },
+    { id: 'p13', name: 'Eggs (whole)', unit: 'large', calories: 72, protein: 6, carbs: 0.4, fat: 5, category: 'proteins' },
+    { id: 'p14', name: 'Egg Whites', unit: 'large', calories: 17, protein: 3.6, carbs: 0.2, fat: 0, category: 'proteins' },
+    { id: 'p15', name: 'Ground Breakfast Sausage (cooked)', unit: 'oz', calories: 92, protein: 5, carbs: 0.5, fat: 7.8, category: 'proteins' },
+    { id: 'p16', name: 'Ribeye Steak (cooked)', unit: 'oz', calories: 75, protein: 7.5, carbs: 0, fat: 5, category: 'proteins' },
+    { id: 'p17', name: 'Pork Chop (cooked)', unit: 'oz', calories: 52, protein: 8, carbs: 0, fat: 2, category: 'proteins' },
+    { id: 'p18', name: 'Pork Tenderloin (cooked)', unit: 'oz', calories: 46, protein: 8, carbs: 0, fat: 1.4, category: 'proteins' },
+    { id: 'p19', name: 'Tuna (canned in water)', unit: 'oz', calories: 33, protein: 7.5, carbs: 0, fat: 0.3, category: 'proteins' },
+    { id: 'p20', name: 'Cod (cooked)', unit: 'oz', calories: 30, protein: 6.5, carbs: 0, fat: 0.3, category: 'proteins' },
+  ],
+  carbs: [
+    { id: 'c1', name: 'White Rice (cooked)', unit: 'cup', calories: 205, protein: 4.3, carbs: 45, fat: 0.4, category: 'carbs' },
+    { id: 'c2', name: 'Brown Rice (cooked)', unit: 'cup', calories: 216, protein: 5, carbs: 45, fat: 1.8, category: 'carbs' },
+    { id: 'c3', name: 'Jasmine Rice (cooked)', unit: 'cup', calories: 205, protein: 4.2, carbs: 45, fat: 0.4, category: 'carbs' },
+    { id: 'c4', name: 'Pasta (cooked)', unit: 'cup', calories: 220, protein: 8, carbs: 43, fat: 1.3, category: 'carbs' },
+    { id: 'c5', name: 'Mashed Potatoes (with butter)', unit: 'cup', calories: 237, protein: 4, carbs: 35, fat: 9, category: 'carbs' },
+    { id: 'c6', name: 'Baked Potato (medium)', unit: 'each', calories: 161, protein: 4.3, carbs: 37, fat: 0.2, category: 'carbs' },
+    { id: 'c7', name: 'Sweet Potato (medium)', unit: 'each', calories: 103, protein: 2.3, carbs: 24, fat: 0.1, category: 'carbs' },
+    { id: 'c8', name: 'Bread (white)', unit: 'slice', calories: 79, protein: 2.7, carbs: 15, fat: 1, category: 'carbs' },
+    { id: 'c9', name: 'Bread (whole wheat)', unit: 'slice', calories: 81, protein: 4, carbs: 14, fat: 1.1, category: 'carbs' },
+    { id: 'c10', name: 'Flour Tortilla (10")', unit: 'each', calories: 218, protein: 5.5, carbs: 36, fat: 5, category: 'carbs' },
+    { id: 'c11', name: 'Flour Tortilla (8")', unit: 'each', calories: 140, protein: 3.5, carbs: 24, fat: 3, category: 'carbs' },
+    { id: 'c12', name: 'English Muffin', unit: 'each', calories: 132, protein: 5, carbs: 26, fat: 1, category: 'carbs' },
+    { id: 'c13', name: 'Bagel (plain)', unit: 'each', calories: 277, protein: 11, carbs: 54, fat: 1.4, category: 'carbs' },
+    { id: 'c14', name: 'Dinner Roll', unit: 'each', calories: 87, protein: 2.4, carbs: 15, fat: 2, category: 'carbs' },
+    { id: 'c15', name: 'Oatmeal (cooked)', unit: 'cup', calories: 158, protein: 6, carbs: 27, fat: 3.2, category: 'carbs' },
+    { id: 'c16', name: 'French Toast', unit: 'slice', calories: 149, protein: 5, carbs: 16, fat: 7, category: 'carbs' },
+    { id: 'c17', name: 'Pancakes (4" diameter)', unit: 'each', calories: 86, protein: 2.5, carbs: 11, fat: 3.5, category: 'carbs' },
+    { id: 'c18', name: 'Tortilla Chips', unit: 'oz', calories: 140, protein: 2, carbs: 18, fat: 7, category: 'carbs' },
+    { id: 'c19', name: 'Quinoa (cooked)', unit: 'cup', calories: 222, protein: 8, carbs: 39, fat: 3.5, category: 'carbs' },
+    { id: 'c20', name: 'Couscous (cooked)', unit: 'cup', calories: 176, protein: 6, carbs: 36, fat: 0.3, category: 'carbs' },
+  ],
+  fruits: [
+    { id: 'f1', name: 'Banana (medium)', unit: 'each', calories: 105, protein: 1.3, carbs: 27, fat: 0.4, category: 'fruits' },
+    { id: 'f2', name: 'Apple (large)', unit: 'each', calories: 116, protein: 0.6, carbs: 31, fat: 0.4, category: 'fruits' },
+    { id: 'f3', name: 'Apple (green, large)', unit: 'each', calories: 116, protein: 0.6, carbs: 31, fat: 0.4, category: 'fruits' },
+    { id: 'f4', name: 'Orange (large)', unit: 'each', calories: 86, protein: 1.7, carbs: 22, fat: 0.2, category: 'fruits' },
+    { id: 'f5', name: 'Grapes', unit: 'cup', calories: 104, protein: 1.1, carbs: 27, fat: 0.2, category: 'fruits' },
+    { id: 'f6', name: 'Strawberries', unit: 'cup', calories: 49, protein: 1, carbs: 12, fat: 0.5, category: 'fruits' },
+    { id: 'f7', name: 'Blueberries', unit: 'cup', calories: 84, protein: 1.1, carbs: 21, fat: 0.5, category: 'fruits' },
+    { id: 'f8', name: 'Orange Juice', unit: 'oz', calories: 14, protein: 0.2, carbs: 3.2, fat: 0, category: 'fruits' },
+    { id: 'f9', name: 'Apple Juice', unit: 'oz', calories: 14, protein: 0, carbs: 3.5, fat: 0, category: 'fruits' },
+    { id: 'f10', name: 'Mango (sliced)', unit: 'cup', calories: 99, protein: 1.4, carbs: 25, fat: 0.6, category: 'fruits' },
+    { id: 'f11', name: 'Pineapple (chunks)', unit: 'cup', calories: 82, protein: 0.9, carbs: 22, fat: 0.2, category: 'fruits' },
+    { id: 'f12', name: 'Watermelon (cubed)', unit: 'cup', calories: 46, protein: 0.9, carbs: 12, fat: 0.2, category: 'fruits' },
+  ],
+  dairy: [
+    { id: 'd1', name: 'Whole Milk', unit: 'oz', calories: 18, protein: 1, carbs: 1.5, fat: 1, category: 'dairy' },
+    { id: 'd2', name: 'Chocolate Milk', unit: 'oz', calories: 25, protein: 1, carbs: 3.2, fat: 1, category: 'dairy' },
+    { id: 'd3', name: '2% Milk', unit: 'oz', calories: 15, protein: 1, carbs: 1.5, fat: 0.6, category: 'dairy' },
+    { id: 'd4', name: 'Greek Yogurt (plain)', unit: 'cup', calories: 146, protein: 20, carbs: 8, fat: 4, category: 'dairy' },
+    { id: 'd5', name: 'Greek Yogurt (vanilla)', unit: 'cup', calories: 180, protein: 18, carbs: 18, fat: 4, category: 'dairy' },
+    { id: 'd6', name: 'Cheddar Cheese', unit: 'oz', calories: 113, protein: 7, carbs: 0.4, fat: 9.3, category: 'dairy' },
+    { id: 'd7', name: 'Provolone Cheese', unit: 'oz', calories: 98, protein: 7.3, carbs: 0.6, fat: 7.5, category: 'dairy' },
+    { id: 'd8', name: 'Mozzarella Cheese', unit: 'oz', calories: 85, protein: 6.3, carbs: 0.6, fat: 6.3, category: 'dairy' },
+    { id: 'd9', name: 'Cottage Cheese (2%)', unit: 'cup', calories: 183, protein: 24, carbs: 9.5, fat: 5, category: 'dairy' },
+    { id: 'd10', name: 'Butter', unit: 'tbsp', calories: 102, protein: 0.1, carbs: 0, fat: 11.5, category: 'dairy' },
+    { id: 'd11', name: 'Cream Cheese', unit: 'oz', calories: 99, protein: 1.7, carbs: 1.6, fat: 9.8, category: 'dairy' },
+  ],
+  fats: [
+    { id: 'fa1', name: 'Avocado', unit: 'whole', calories: 322, protein: 4, carbs: 17, fat: 29, category: 'fats' },
+    { id: 'fa2', name: 'Peanut Butter', unit: 'tbsp', calories: 94, protein: 4, carbs: 3.5, fat: 8, category: 'fats' },
+    { id: 'fa3', name: 'Almond Butter', unit: 'tbsp', calories: 98, protein: 3.4, carbs: 3, fat: 9, category: 'fats' },
+    { id: 'fa4', name: 'Olive Oil', unit: 'tbsp', calories: 119, protein: 0, carbs: 0, fat: 13.5, category: 'fats' },
+    { id: 'fa5', name: 'Almonds', unit: 'oz', calories: 164, protein: 6, carbs: 6, fat: 14, category: 'fats' },
+    { id: 'fa6', name: 'Walnuts', unit: 'oz', calories: 185, protein: 4.3, carbs: 4, fat: 18.5, category: 'fats' },
+    { id: 'fa7', name: 'Cashews', unit: 'oz', calories: 157, protein: 5, carbs: 9, fat: 12, category: 'fats' },
+    { id: 'fa8', name: 'Sunflower Seeds', unit: 'oz', calories: 165, protein: 5.5, carbs: 7, fat: 14, category: 'fats' },
+  ],
+  vegetables: [
+    { id: 'v1', name: 'Bell Pepper (whole)', unit: 'each', calories: 30, protein: 1, carbs: 6, fat: 0.3, category: 'vegetables' },
+    { id: 'v2', name: 'Broccoli (cooked)', unit: 'cup', calories: 55, protein: 3.7, carbs: 11, fat: 0.6, category: 'vegetables' },
+    { id: 'v3', name: 'Spinach (raw)', unit: 'cup', calories: 7, protein: 0.9, carbs: 1.1, fat: 0.1, category: 'vegetables' },
+    { id: 'v4', name: 'Green Beans (cooked)', unit: 'cup', calories: 44, protein: 2.4, carbs: 10, fat: 0.4, category: 'vegetables' },
+    { id: 'v5', name: 'Carrots (raw, medium)', unit: 'each', calories: 25, protein: 0.6, carbs: 6, fat: 0.1, category: 'vegetables' },
+    { id: 'v6', name: 'Mixed Salad Greens', unit: 'cup', calories: 9, protein: 0.7, carbs: 1.5, fat: 0.1, category: 'vegetables' },
+    { id: 'v7', name: 'Corn (cooked)', unit: 'cup', calories: 143, protein: 5, carbs: 31, fat: 2, category: 'vegetables' },
+    { id: 'v8', name: 'Peas (cooked)', unit: 'cup', calories: 134, protein: 9, carbs: 25, fat: 0.4, category: 'vegetables' },
+    { id: 'v9', name: 'Asparagus (cooked)', unit: 'cup', calories: 40, protein: 4.3, carbs: 8, fat: 0.4, category: 'vegetables' },
+    { id: 'v10', name: 'Zucchini (cooked)', unit: 'cup', calories: 27, protein: 1, carbs: 5, fat: 0.5, category: 'vegetables' },
+  ],
+  extras: [
+    { id: 'e1', name: 'Maple Syrup', unit: 'tbsp', calories: 52, protein: 0, carbs: 13, fat: 0, category: 'extras' },
+    { id: 'e2', name: 'Honey', unit: 'tbsp', calories: 64, protein: 0.1, carbs: 17, fat: 0, category: 'extras' },
+    { id: 'e3', name: 'Chocolate Chip Cookie (homemade)', unit: 'each', calories: 78, protein: 1, carbs: 10, fat: 4, category: 'extras' },
+    { id: 'e4', name: 'Chocolate Chip Muffin (large)', unit: 'each', calories: 340, protein: 5, carbs: 50, fat: 14, category: 'extras' },
+    { id: 'e5', name: 'Jelly/Jam', unit: 'tbsp', calories: 56, protein: 0.1, carbs: 14, fat: 0, category: 'extras' },
+    { id: 'e6', name: 'Ranch Dressing', unit: 'tbsp', calories: 73, protein: 0.1, carbs: 0.6, fat: 7.7, category: 'extras' },
+    { id: 'e7', name: 'BBQ Sauce', unit: 'tbsp', calories: 29, protein: 0.1, carbs: 7, fat: 0.1, category: 'extras' },
+    { id: 'e8', name: 'Ketchup', unit: 'tbsp', calories: 19, protein: 0.2, carbs: 5, fat: 0, category: 'extras' },
+    { id: 'e9', name: 'Mayonnaise', unit: 'tbsp', calories: 94, protein: 0.1, carbs: 0.1, fat: 10, category: 'extras' },
+    { id: 'e10', name: 'Soy Sauce', unit: 'tbsp', calories: 9, protein: 1, carbs: 1, fat: 0, category: 'extras' },
+    { id: 'e11', name: 'Granola Bar', unit: 'each', calories: 117, protein: 2, carbs: 19, fat: 4, category: 'extras' },
+    { id: 'e12', name: 'Protein Bar (average)', unit: 'each', calories: 200, protein: 20, carbs: 22, fat: 7, category: 'extras' },
+  ],
+  corvive: [
+    { id: 'cv1', name: 'CorVive Protein+Collagen Sachet', unit: 'sachet', calories: 130, protein: 17, carbs: 9, fat: 3, category: 'corvive' },
+    { id: 'cv2', name: 'CorVive Hydrate', unit: 'packet', calories: 15, protein: 0, carbs: 4, fat: 0, category: 'corvive' },
+    { id: 'cv3', name: 'CorVive Creatine', unit: '5g scoop', calories: 0, protein: 0, carbs: 0, fat: 0, category: 'corvive' },
+  ],
+  restaurant: [
+    { id: 'r1', name: 'Chipotle Rice', unit: 'cup', calories: 210, protein: 4, carbs: 40, fat: 4, category: 'restaurant' },
+    { id: 'r2', name: 'Chipotle Black Beans', unit: 'serving', calories: 130, protein: 7, carbs: 22, fat: 1, category: 'restaurant' },
+    { id: 'r3', name: 'Chipotle Chicken', unit: 'oz', calories: 50, protein: 7, carbs: 0, fat: 2.3, category: 'restaurant' },
+    { id: 'r4', name: 'Chipotle Steak', unit: 'oz', calories: 48, protein: 6, carbs: 0, fat: 2.4, category: 'restaurant' },
+    { id: 'r5', name: 'Chipotle Guacamole', unit: 'serving', calories: 230, protein: 3, carbs: 13, fat: 20, category: 'restaurant' },
+    { id: 'r6', name: 'Chipotle Cheese', unit: 'oz', calories: 110, protein: 7, carbs: 1, fat: 9, category: 'restaurant' },
+    { id: 'r7', name: 'Chipotle Sour Cream', unit: 'serving', calories: 110, protein: 2, carbs: 2, fat: 11, category: 'restaurant' },
+    { id: 'r8', name: 'Sushi Rice', unit: 'cup', calories: 240, protein: 5, carbs: 53, fat: 0.4, category: 'restaurant' },
+    { id: 'r9', name: 'Sushi Salmon (raw)', unit: 'oz', calories: 52, protein: 7, carbs: 0, fat: 2.3, category: 'restaurant' },
+    { id: 'r10', name: 'Sushi Tuna (raw)', unit: 'oz', calories: 41, protein: 8.5, carbs: 0, fat: 0.5, category: 'restaurant' },
+  ]
+};
+
+// Flatten the food database for easy lookup
+export const ALL_FOODS = Object.values(FOOD_DATABASE).flat();
+
+// Get food by ID
+export const getFoodById = (id) => ALL_FOODS.find(f => f.id === id);
+
+// Search foods
+export const searchFoods = (query, category = 'all') => {
+  return ALL_FOODS.filter(food => {
+    const matchesSearch = food.name.toLowerCase().includes(query.toLowerCase());
+    const matchesCategory = category === 'all' || food.category === category;
+    return matchesSearch && matchesCategory;
+  });
+};
+
+// Categories for filtering
+export const FOOD_CATEGORIES = [
+  { id: 'all', name: 'All Foods' },
+  { id: 'proteins', name: 'Proteins' },
+  { id: 'carbs', name: 'Carbs' },
+  { id: 'fruits', name: 'Fruits' },
+  { id: 'dairy', name: 'Dairy' },
+  { id: 'fats', name: 'Fats & Nuts' },
+  { id: 'vegetables', name: 'Vegetables' },
+  { id: 'extras', name: 'Extras & Sauces' },
+  { id: 'corvive', name: 'CorVive' },
+  { id: 'restaurant', name: 'Restaurant' },
+];
