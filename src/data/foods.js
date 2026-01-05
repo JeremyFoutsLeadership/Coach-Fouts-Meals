@@ -82,6 +82,7 @@ export const FOOD_DATABASE = {
     { id: 'fa6', name: 'Walnuts', unit: 'oz', calories: 185, protein: 4.3, carbs: 4, fat: 18.5, category: 'fats' },
     { id: 'fa7', name: 'Cashews', unit: 'oz', calories: 157, protein: 5, carbs: 9, fat: 12, category: 'fats' },
     { id: 'fa8', name: 'Sunflower Seeds', unit: 'oz', calories: 165, protein: 5.5, carbs: 7, fat: 14, category: 'fats' },
+    { id: 'fa9', name: 'Candied Pecans (Buc-ees Style)', unit: '1/4 cup', calories: 210, protein: 2.5, carbs: 16, fat: 17, category: 'fats' },
   ],
   vegetables: [
     { id: 'v1', name: 'Bell Pepper (whole)', unit: 'each', calories: 30, protein: 1, carbs: 6, fat: 0.3, category: 'vegetables' },
@@ -125,7 +126,26 @@ export const FOOD_DATABASE = {
     { id: 'r8', name: 'Sushi Rice', unit: 'cup', calories: 240, protein: 5, carbs: 53, fat: 0.4, category: 'restaurant' },
     { id: 'r9', name: 'Sushi Salmon (raw)', unit: 'oz', calories: 52, protein: 7, carbs: 0, fat: 2.3, category: 'restaurant' },
     { id: 'r10', name: 'Sushi Tuna (raw)', unit: 'oz', calories: 41, protein: 8.5, carbs: 0, fat: 0.5, category: 'restaurant' },
-  ]
+  ],
+  // ============================================
+  // COACH FOUTS MEAL PREP RECIPES
+  // ============================================
+  meals: [
+    // HIGH PROTEIN DINNERS
+    { id: 'm1', name: 'Chicken Pesto Alfredo Lasagna', unit: 'serving', calories: 676, protein: 67, carbs: 42, fat: 30, category: 'meals' },
+    { id: 'm2', name: 'Breakfast Enchiladas', unit: 'enchilada', calories: 664, protein: 32, carbs: 31, fat: 44, category: 'meals' },
+    { id: 'm3', name: 'French Toast Casserole (w/ icing)', unit: 'serving', calories: 687, protein: 19, carbs: 77, fat: 33, category: 'meals' },
+    { id: 'm4', name: 'Orange Chicken with Rice', unit: 'serving', calories: 420, protein: 48, carbs: 52, fat: 8, category: 'meals' },
+    { id: 'm5', name: 'Big Mac Burrito', unit: 'burrito', calories: 680, protein: 46, carbs: 48, fat: 32, category: 'meals' },
+    { id: 'm6', name: 'Chicken Fettuccine Garlic Herb', unit: 'serving', calories: 620, protein: 52, carbs: 68, fat: 18, category: 'meals' },
+    { id: 'm7', name: 'Cajun Beef with Pasta & Honey', unit: 'serving', calories: 590, protein: 44, carbs: 62, fat: 18, category: 'meals' },
+    { id: 'm8', name: 'Honey BBQ Chicken Mac & Cheese', unit: 'serving', calories: 587, protein: 59, carbs: 68, fat: 9, category: 'meals' },
+    
+    // OVERNIGHT OATS (3:1 PRE-WORKOUT)
+    { id: 'm9', name: 'Apple Pie Overnight Oats (3:1)', unit: 'serving', calories: 625, protein: 35, carbs: 105, fat: 18, category: 'meals' },
+    { id: 'm10', name: 'PB Banana Overnight Oats (3:1)', unit: 'serving', calories: 655, protein: 36, carbs: 107, fat: 22, category: 'meals' },
+    { id: 'm11', name: 'Blueberry Muffin Overnight Oats (3:1)', unit: 'serving', calories: 615, protein: 35, carbs: 105, fat: 18, category: 'meals' },
+  ],
 };
 
 // Flatten the food database for easy lookup
@@ -146,6 +166,7 @@ export const searchFoods = (query, category = 'all') => {
 // Categories for filtering
 export const FOOD_CATEGORIES = [
   { id: 'all', name: 'All Foods' },
+  { id: 'meals', name: '🍽️ Meal Prep Recipes' },
   { id: 'proteins', name: 'Proteins' },
   { id: 'carbs', name: 'Carbs' },
   { id: 'fruits', name: 'Fruits' },
