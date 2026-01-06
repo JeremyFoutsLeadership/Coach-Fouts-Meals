@@ -161,6 +161,25 @@ export const FOOD_DATABASE = {
     { id: 'r9', name: 'Sushi Salmon (raw)', unit: 'oz', calories: 52, protein: 7, carbs: 0, fat: 2.3, category: 'restaurant' },
     { id: 'r10', name: 'Sushi Tuna (raw)', unit: 'oz', calories: 41, protein: 8.5, carbs: 0, fat: 0.5, category: 'restaurant' },
   ],
+  // ============================================
+  // COACH FOUTS MEAL PREP RECIPES (Quick Add)
+  // ============================================
+  meals: [
+    // HIGH PROTEIN DINNERS
+    { id: 'm1', name: 'Chicken Pesto Alfredo Lasagna', unit: 'serving', calories: 676, protein: 67, carbs: 42, fat: 30, category: 'meals' },
+    { id: 'm2', name: 'Breakfast Enchiladas', unit: 'enchilada', calories: 664, protein: 32, carbs: 31, fat: 44, category: 'meals' },
+    { id: 'm3', name: 'French Toast Casserole (w/ icing)', unit: 'serving', calories: 687, protein: 19, carbs: 77, fat: 33, category: 'meals' },
+    { id: 'm4', name: 'Orange Chicken with Rice', unit: 'serving', calories: 420, protein: 48, carbs: 52, fat: 8, category: 'meals' },
+    { id: 'm5', name: 'Big Mac Burrito', unit: 'burrito', calories: 680, protein: 46, carbs: 48, fat: 32, category: 'meals' },
+    { id: 'm6', name: 'Chicken Fettuccine Garlic Herb', unit: 'serving', calories: 620, protein: 52, carbs: 68, fat: 18, category: 'meals' },
+    { id: 'm7', name: 'Cajun Beef with Pasta & Honey', unit: 'serving', calories: 590, protein: 44, carbs: 62, fat: 18, category: 'meals' },
+    { id: 'm8', name: 'Honey BBQ Chicken Mac & Cheese', unit: 'serving', calories: 587, protein: 59, carbs: 68, fat: 9, category: 'meals' },
+    
+    // OVERNIGHT OATS (3:1 PRE-WORKOUT)
+    { id: 'm9', name: 'Apple Pie Overnight Oats (3:1)', unit: 'serving', calories: 625, protein: 35, carbs: 105, fat: 18, category: 'meals' },
+    { id: 'm10', name: 'PB Banana Overnight Oats (3:1)', unit: 'serving', calories: 655, protein: 36, carbs: 107, fat: 22, category: 'meals' },
+    { id: 'm11', name: 'Blueberry Muffin Overnight Oats (3:1)', unit: 'serving', calories: 615, protein: 35, carbs: 105, fat: 18, category: 'meals' },
+  ],
 };
 
 // Flatten the food database for easy lookup
@@ -181,6 +200,7 @@ export const searchFoods = (query, category = 'all') => {
 // Categories for filtering
 export const FOOD_CATEGORIES = [
   { id: 'all', name: 'All Foods' },
+  { id: 'meals', name: '🍽️ Meal Prep Recipes' },
   { id: 'proteins', name: 'Proteins' },
   { id: 'carbs', name: 'Carbs' },
   { id: 'fruits', name: 'Fruits' },
