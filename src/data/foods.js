@@ -23,6 +23,8 @@ export const FOOD_DATABASE = {
     { id: 'p18', name: 'Pork Tenderloin (cooked)', unit: 'oz', calories: 46, protein: 8, carbs: 0, fat: 1.4, category: 'proteins' },
     { id: 'p19', name: 'Tuna (canned in water)', unit: 'oz', calories: 33, protein: 7.5, carbs: 0, fat: 0.3, category: 'proteins' },
     { id: 'p20', name: 'Cod (cooked)', unit: 'oz', calories: 30, protein: 6.5, carbs: 0, fat: 0.3, category: 'proteins' },
+    { id: 'p21', name: 'Beef Sirloin (cooked)', unit: 'oz', calories: 52, protein: 8.2, carbs: 0, fat: 2, category: 'proteins' },
+    { id: 'p22', name: 'Ground Beef 90/10 (cooked)', unit: 'oz', calories: 55, protein: 7.8, carbs: 0, fat: 2.6, category: 'proteins' },
   ],
   carbs: [
     { id: 'c1', name: 'White Rice (cooked)', unit: 'cup', calories: 205, protein: 4.3, carbs: 45, fat: 0.4, category: 'carbs' },
@@ -45,6 +47,13 @@ export const FOOD_DATABASE = {
     { id: 'c18', name: 'Tortilla Chips', unit: 'oz', calories: 140, protein: 2, carbs: 18, fat: 7, category: 'carbs' },
     { id: 'c19', name: 'Quinoa (cooked)', unit: 'cup', calories: 222, protein: 8, carbs: 39, fat: 3.5, category: 'carbs' },
     { id: 'c20', name: 'Couscous (cooked)', unit: 'cup', calories: 176, protein: 6, carbs: 36, fat: 0.3, category: 'carbs' },
+    { id: 'c21', name: 'Rolled Oats (dry)', unit: 'cup', calories: 307, protein: 11, carbs: 55, fat: 5, category: 'carbs' },
+    { id: 'c22', name: 'Lasagna Noodles (dry)', unit: 'oz', calories: 105, protein: 4, carbs: 21, fat: 0.5, category: 'carbs' },
+    { id: 'c23', name: 'Fettuccine (cooked)', unit: 'cup', calories: 220, protein: 8, carbs: 43, fat: 1.3, category: 'carbs' },
+    { id: 'c24', name: 'Penne Pasta (cooked)', unit: 'cup', calories: 220, protein: 8, carbs: 43, fat: 1.3, category: 'carbs' },
+    { id: 'c25', name: 'Macaroni (cooked)', unit: 'cup', calories: 220, protein: 8, carbs: 43, fat: 1.3, category: 'carbs' },
+    { id: 'c26', name: 'Brioche Bread', unit: 'slice', calories: 120, protein: 4, carbs: 18, fat: 4, category: 'carbs' },
+    { id: 'c27', name: 'Cornstarch', unit: 'tbsp', calories: 30, protein: 0, carbs: 7, fat: 0, category: 'carbs' },
   ],
   fruits: [
     { id: 'f1', name: 'Banana (medium)', unit: 'each', calories: 105, protein: 1.3, carbs: 27, fat: 0.4, category: 'fruits' },
@@ -59,6 +68,7 @@ export const FOOD_DATABASE = {
     { id: 'f10', name: 'Mango (sliced)', unit: 'cup', calories: 99, protein: 1.4, carbs: 25, fat: 0.6, category: 'fruits' },
     { id: 'f11', name: 'Pineapple (chunks)', unit: 'cup', calories: 82, protein: 0.9, carbs: 22, fat: 0.2, category: 'fruits' },
     { id: 'f12', name: 'Watermelon (cubed)', unit: 'cup', calories: 46, protein: 0.9, carbs: 12, fat: 0.2, category: 'fruits' },
+    { id: 'f13', name: 'Apple (diced)', unit: 'cup', calories: 65, protein: 0.3, carbs: 17, fat: 0.2, category: 'fruits' },
   ],
   dairy: [
     { id: 'd1', name: 'Whole Milk', unit: 'oz', calories: 18, protein: 1, carbs: 1.5, fat: 1, category: 'dairy' },
@@ -72,6 +82,14 @@ export const FOOD_DATABASE = {
     { id: 'd9', name: 'Cottage Cheese (2%)', unit: 'cup', calories: 183, protein: 24, carbs: 9.5, fat: 5, category: 'dairy' },
     { id: 'd10', name: 'Butter', unit: 'tbsp', calories: 102, protein: 0.1, carbs: 0, fat: 11.5, category: 'dairy' },
     { id: 'd11', name: 'Cream Cheese', unit: 'oz', calories: 99, protein: 1.7, carbs: 1.6, fat: 9.8, category: 'dairy' },
+    { id: 'd12', name: 'Parmesan Cheese', unit: 'oz', calories: 111, protein: 10, carbs: 0.9, fat: 7.3, category: 'dairy' },
+    { id: 'd13', name: 'Mozzarella (reduced fat)', unit: 'oz', calories: 70, protein: 7, carbs: 1, fat: 4.5, category: 'dairy' },
+    { id: 'd14', name: 'Heavy Cream', unit: 'tbsp', calories: 51, protein: 0.4, carbs: 0.4, fat: 5.5, category: 'dairy' },
+    { id: 'd15', name: 'Whole Milk Yogurt (vanilla)', unit: 'cup', calories: 220, protein: 9, carbs: 34, fat: 6, category: 'dairy' },
+    { id: 'd16', name: 'Sour Cream', unit: 'tbsp', calories: 23, protein: 0.3, carbs: 0.5, fat: 2.3, category: 'dairy' },
+    { id: 'd17', name: 'American Cheese', unit: 'oz', calories: 94, protein: 5, carbs: 2, fat: 7.5, category: 'dairy' },
+    { id: 'd18', name: 'Evaporated Milk (fat free)', unit: 'oz', calories: 25, protein: 2.4, carbs: 3.6, fat: 0.1, category: 'dairy' },
+    { id: 'd19', name: 'Light Cheddar Cheese', unit: 'oz', calories: 70, protein: 8, carbs: 1, fat: 4, category: 'dairy' },
   ],
   fats: [
     { id: 'fa1', name: 'Avocado', unit: 'whole', calories: 322, protein: 4, carbs: 17, fat: 29, category: 'fats' },
@@ -83,6 +101,8 @@ export const FOOD_DATABASE = {
     { id: 'fa7', name: 'Cashews', unit: 'oz', calories: 157, protein: 5, carbs: 9, fat: 12, category: 'fats' },
     { id: 'fa8', name: 'Sunflower Seeds', unit: 'oz', calories: 165, protein: 5.5, carbs: 7, fat: 14, category: 'fats' },
     { id: 'fa9', name: 'Candied Pecans (Buc-ees Style)', unit: '1/4 cup', calories: 210, protein: 2.5, carbs: 16, fat: 17, category: 'fats' },
+    { id: 'fa10', name: 'Chia Seeds', unit: 'tbsp', calories: 58, protein: 2, carbs: 5, fat: 3.7, category: 'fats' },
+    { id: 'fa11', name: 'Vegetable Oil', unit: 'tbsp', calories: 120, protein: 0, carbs: 0, fat: 14, category: 'fats' },
   ],
   vegetables: [
     { id: 'v1', name: 'Bell Pepper (whole)', unit: 'each', calories: 30, protein: 1, carbs: 6, fat: 0.3, category: 'vegetables' },
@@ -95,6 +115,12 @@ export const FOOD_DATABASE = {
     { id: 'v8', name: 'Peas (cooked)', unit: 'cup', calories: 134, protein: 9, carbs: 25, fat: 0.4, category: 'vegetables' },
     { id: 'v9', name: 'Asparagus (cooked)', unit: 'cup', calories: 40, protein: 4.3, carbs: 8, fat: 0.4, category: 'vegetables' },
     { id: 'v10', name: 'Zucchini (cooked)', unit: 'cup', calories: 27, protein: 1, carbs: 5, fat: 0.5, category: 'vegetables' },
+    { id: 'v11', name: 'Onion (diced)', unit: 'cup', calories: 64, protein: 1.8, carbs: 15, fat: 0.2, category: 'vegetables' },
+    { id: 'v12', name: 'Green Onions', unit: 'tbsp', calories: 2, protein: 0.1, carbs: 0.4, fat: 0, category: 'vegetables' },
+    { id: 'v13', name: 'Garlic (minced)', unit: 'clove', calories: 4, protein: 0.2, carbs: 1, fat: 0, category: 'vegetables' },
+    { id: 'v14', name: 'Ginger (minced)', unit: 'tbsp', calories: 5, protein: 0.1, carbs: 1, fat: 0, category: 'vegetables' },
+    { id: 'v15', name: 'Diced Tomatoes (canned)', unit: 'cup', calories: 32, protein: 1.6, carbs: 7, fat: 0.2, category: 'vegetables' },
+    { id: 'v16', name: 'Bell Pepper (sliced)', unit: 'cup', calories: 30, protein: 1, carbs: 6, fat: 0.3, category: 'vegetables' },
   ],
   extras: [
     { id: 'e1', name: 'Maple Syrup', unit: 'tbsp', calories: 52, protein: 0, carbs: 13, fat: 0, category: 'extras' },
@@ -109,6 +135,14 @@ export const FOOD_DATABASE = {
     { id: 'e10', name: 'Soy Sauce', unit: 'tbsp', calories: 9, protein: 1, carbs: 1, fat: 0, category: 'extras' },
     { id: 'e11', name: 'Granola Bar', unit: 'each', calories: 117, protein: 2, carbs: 19, fat: 4, category: 'extras' },
     { id: 'e12', name: 'Protein Bar (average)', unit: 'each', calories: 200, protein: 20, carbs: 22, fat: 7, category: 'extras' },
+    { id: 'e13', name: 'Basil Pesto', unit: 'tbsp', calories: 80, protein: 2, carbs: 1, fat: 8, category: 'extras' },
+    { id: 'e14', name: 'BBQ Sauce (sugar free)', unit: 'tbsp', calories: 10, protein: 0, carbs: 2, fat: 0, category: 'extras' },
+    { id: 'e15', name: 'Mustard', unit: 'tbsp', calories: 10, protein: 0.6, carbs: 1, fat: 0.5, category: 'extras' },
+    { id: 'e16', name: 'Rice Vinegar', unit: 'tbsp', calories: 3, protein: 0, carbs: 0, fat: 0, category: 'extras' },
+    { id: 'e17', name: 'Worcestershire Sauce', unit: 'tbsp', calories: 13, protein: 0, carbs: 3, fat: 0, category: 'extras' },
+    { id: 'e18', name: 'Powdered Sugar', unit: 'tbsp', calories: 30, protein: 0, carbs: 8, fat: 0, category: 'extras' },
+    { id: 'e19', name: 'Brown Sugar', unit: 'tbsp', calories: 52, protein: 0, carbs: 13, fat: 0, category: 'extras' },
+    { id: 'e20', name: 'Cajun Seasoning', unit: 'tbsp', calories: 8, protein: 0.4, carbs: 1.7, fat: 0.3, category: 'extras' },
   ],
   corvive: [
     { id: 'cv1', name: 'CorVive Protein+Collagen Sachet', unit: 'sachet', calories: 130, protein: 17, carbs: 9, fat: 3, category: 'corvive' },
@@ -126,25 +160,6 @@ export const FOOD_DATABASE = {
     { id: 'r8', name: 'Sushi Rice', unit: 'cup', calories: 240, protein: 5, carbs: 53, fat: 0.4, category: 'restaurant' },
     { id: 'r9', name: 'Sushi Salmon (raw)', unit: 'oz', calories: 52, protein: 7, carbs: 0, fat: 2.3, category: 'restaurant' },
     { id: 'r10', name: 'Sushi Tuna (raw)', unit: 'oz', calories: 41, protein: 8.5, carbs: 0, fat: 0.5, category: 'restaurant' },
-  ],
-  // ============================================
-  // COACH FOUTS MEAL PREP RECIPES
-  // ============================================
-  meals: [
-    // HIGH PROTEIN DINNERS
-    { id: 'm1', name: 'Chicken Pesto Alfredo Lasagna', unit: 'serving', calories: 676, protein: 67, carbs: 42, fat: 30, category: 'meals' },
-    { id: 'm2', name: 'Breakfast Enchiladas', unit: 'enchilada', calories: 664, protein: 32, carbs: 31, fat: 44, category: 'meals' },
-    { id: 'm3', name: 'French Toast Casserole (w/ icing)', unit: 'serving', calories: 687, protein: 19, carbs: 77, fat: 33, category: 'meals' },
-    { id: 'm4', name: 'Orange Chicken with Rice', unit: 'serving', calories: 420, protein: 48, carbs: 52, fat: 8, category: 'meals' },
-    { id: 'm5', name: 'Big Mac Burrito', unit: 'burrito', calories: 680, protein: 46, carbs: 48, fat: 32, category: 'meals' },
-    { id: 'm6', name: 'Chicken Fettuccine Garlic Herb', unit: 'serving', calories: 620, protein: 52, carbs: 68, fat: 18, category: 'meals' },
-    { id: 'm7', name: 'Cajun Beef with Pasta & Honey', unit: 'serving', calories: 590, protein: 44, carbs: 62, fat: 18, category: 'meals' },
-    { id: 'm8', name: 'Honey BBQ Chicken Mac & Cheese', unit: 'serving', calories: 587, protein: 59, carbs: 68, fat: 9, category: 'meals' },
-    
-    // OVERNIGHT OATS (3:1 PRE-WORKOUT)
-    { id: 'm9', name: 'Apple Pie Overnight Oats (3:1)', unit: 'serving', calories: 625, protein: 35, carbs: 105, fat: 18, category: 'meals' },
-    { id: 'm10', name: 'PB Banana Overnight Oats (3:1)', unit: 'serving', calories: 655, protein: 36, carbs: 107, fat: 22, category: 'meals' },
-    { id: 'm11', name: 'Blueberry Muffin Overnight Oats (3:1)', unit: 'serving', calories: 615, protein: 35, carbs: 105, fat: 18, category: 'meals' },
   ],
 };
 
@@ -166,7 +181,6 @@ export const searchFoods = (query, category = 'all') => {
 // Categories for filtering
 export const FOOD_CATEGORIES = [
   { id: 'all', name: 'All Foods' },
-  { id: 'meals', name: '🍽️ Meal Prep Recipes' },
   { id: 'proteins', name: 'Proteins' },
   { id: 'carbs', name: 'Carbs' },
   { id: 'fruits', name: 'Fruits' },
