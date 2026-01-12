@@ -160,6 +160,19 @@ export default function IntakeForm() {
     gap: '8px'
   };
 
+  const checkboxLabelStyle = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    cursor: 'pointer',
+    color: '#1f2937'
+  };
+
+  const checkboxTextStyle = {
+    fontSize: '14px',
+    color: '#1f2937'
+  };
+
   return (
     <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%)', padding: '32px 16px' }}>
       <div style={{ maxWidth: '800px', margin: '0 auto' }}>
@@ -264,9 +277,9 @@ export default function IntakeForm() {
               <label style={{ ...labelStyle, marginBottom: '8px' }}>Proteins I Like ✓</label>
               <div style={checkboxContainerStyle}>
                 {PROTEINS.map(protein => (
-                  <label key={protein} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                  <label key={protein} style={checkboxLabelStyle}>
                     <input type="checkbox" checked={form.proteins_liked.includes(protein)} onChange={() => toggleArrayItem('proteins_liked', protein)} />
-                    <span style={{ fontSize: '14px' }}>{protein}</span>
+                    <span style={checkboxTextStyle}>{protein}</span>
                   </label>
                 ))}
               </div>
@@ -276,9 +289,9 @@ export default function IntakeForm() {
               <label style={{ ...labelStyle, marginBottom: '8px' }}>Carbs I Like ✓</label>
               <div style={checkboxContainerStyle}>
                 {CARBS.map(carb => (
-                  <label key={carb} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                  <label key={carb} style={checkboxLabelStyle}>
                     <input type="checkbox" checked={form.carbs_liked.includes(carb)} onChange={() => toggleArrayItem('carbs_liked', carb)} />
-                    <span style={{ fontSize: '14px' }}>{carb}</span>
+                    <span style={checkboxTextStyle}>{carb}</span>
                   </label>
                 ))}
               </div>
@@ -288,9 +301,9 @@ export default function IntakeForm() {
               <label style={{ ...labelStyle, marginBottom: '8px' }}>Fruits I Like ✓</label>
               <div style={checkboxContainerStyle}>
                 {FRUITS.map(fruit => (
-                  <label key={fruit} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                  <label key={fruit} style={checkboxLabelStyle}>
                     <input type="checkbox" checked={form.fruits_liked.includes(fruit)} onChange={() => toggleArrayItem('fruits_liked', fruit)} />
-                    <span style={{ fontSize: '14px' }}>{fruit}</span>
+                    <span style={checkboxTextStyle}>{fruit}</span>
                   </label>
                 ))}
               </div>
@@ -300,9 +313,9 @@ export default function IntakeForm() {
               <label style={{ ...labelStyle, marginBottom: '8px' }}>Vegetables I Like ✓</label>
               <div style={checkboxContainerStyle}>
                 {VEGETABLES.map(veg => (
-                  <label key={veg} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                  <label key={veg} style={checkboxLabelStyle}>
                     <input type="checkbox" checked={form.vegetables_liked.includes(veg)} onChange={() => toggleArrayItem('vegetables_liked', veg)} />
-                    <span style={{ fontSize: '14px' }}>{veg}</span>
+                    <span style={checkboxTextStyle}>{veg}</span>
                   </label>
                 ))}
               </div>
@@ -321,9 +334,9 @@ export default function IntakeForm() {
               <label style={{ ...labelStyle, marginBottom: '8px' }}>Food Allergies</label>
               <div style={checkboxContainerStyle}>
                 {['Peanuts', 'Tree Nuts', 'Dairy', 'Eggs', 'Shellfish', 'Fish', 'Wheat/Gluten', 'Soy'].map(allergy => (
-                  <label key={allergy} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                  <label key={allergy} style={checkboxLabelStyle}>
                     <input type="checkbox" checked={form.allergies.includes(allergy)} onChange={() => toggleArrayItem('allergies', allergy)} />
-                    <span style={{ fontSize: '14px' }}>{allergy}</span>
+                    <span style={checkboxTextStyle}>{allergy}</span>
                   </label>
                 ))}
               </div>
@@ -333,9 +346,9 @@ export default function IntakeForm() {
               <label style={{ ...labelStyle, marginBottom: '8px' }}>Dietary Restrictions</label>
               <div style={checkboxContainerStyle}>
                 {['Gluten-Free', 'Dairy-Free', 'Vegetarian', 'No Pork', 'No Red Meat', 'Kosher'].map(restriction => (
-                  <label key={restriction} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                  <label key={restriction} style={checkboxLabelStyle}>
                     <input type="checkbox" checked={form.dietary_restrictions.includes(restriction)} onChange={() => toggleArrayItem('dietary_restrictions', restriction)} />
-                    <span style={{ fontSize: '14px' }}>{restriction}</span>
+                    <span style={checkboxTextStyle}>{restriction}</span>
                   </label>
                 ))}
               </div>
@@ -365,13 +378,13 @@ export default function IntakeForm() {
             </div>
 
             <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+              <label style={checkboxLabelStyle}>
                 <input type="checkbox" name="has_microwave_at_school" checked={form.has_microwave_at_school} onChange={handleChange} />
-                <span>Microwave available at school</span>
+                <span style={checkboxTextStyle}>Microwave available at school</span>
               </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+              <label style={checkboxLabelStyle}>
                 <input type="checkbox" name="cooks_own_meals" checked={form.cooks_own_meals} onChange={handleChange} />
-                <span>Athlete cooks their own meals</span>
+                <span style={checkboxTextStyle}>Athlete cooks their own meals</span>
               </label>
             </div>
 
