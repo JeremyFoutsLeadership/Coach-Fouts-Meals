@@ -1039,19 +1039,17 @@ const FoodDatabase = () => {
 };
 
 // ============================================
-// MAIN APP
+// ADMIN APP WRAPPER (with header/nav)
 // ============================================
-function App() {
+const AdminApp = () => {
   const [athletes, setAthletes] = useState([]);
   const [mealPlans, setMealPlans] = useState([]);
   
-  // Load data on mount
   useEffect(() => {
     setAthletes(localDB.getAthletes());
     setMealPlans(localDB.getMealPlans());
   }, []);
   
-  // Helper functions
   const addAthlete = (athleteData) => {
     const newAthlete = localDB.addAthlete(athleteData);
     setAthletes(localDB.getAthletes());
@@ -1097,32 +1095,36 @@ function App() {
   
   return (
     <AppContext.Provider value={contextValue}>
-      <BrowserRouter>
-        <Routes>
-          {/* Public intake form - NO header/nav */}
-          <Route path="/intake" element={<IntakeForm />} />
-          
-          {/* Admin routes - WITH header/nav */}
-          <Route path="/*" element={
-            <div className="app">
-              <Header />
-              <main className="main">
-                <Routes>
-                  <Route path="/" element={<Dashboard />} />
-                  <Route path="/athletes" element={<AthletesList />} />
-                  <Route path="/athletes/new" element={<AthleteForm />} />
-                  <Route path="/athletes/:id" element={<AthleteDetail />} />
-                  <Route path="/athletes/:id/edit" element={<AthleteForm />} />
-                  <Route path="/builder" element={<PlanBuilder />} />
-                  <Route path="/meals" element={<SavedMeals />} />
-                  <Route path="/foods" element={<FoodDatabase />} />
-                </Routes>
-              </main>
-            </div>
-          } />
-        </Routes>
-      </BrowserRouter>
+      <div className="app">
+        <Header />
+        <main className="main">
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/athletes" element={<AthletesList />} />
+            <Route path="/athletes/new" element={<AthleteForm />} />
+            <Route path="/athletes/:id" element={<AthleteDetail />} />
+            <Route path="/athletes/:id/edit" element={<AthleteForm />} />
+            <Route path="/builder" element={<PlanBuilder />} />
+            <Route path="/meals" element={<SavedMeals />} />
+            <Route path="/foods" element={<FoodDatabase />} />
+          </Routes>
+        </main>
+      </div>
     </AppContext.Provider>
+  );
+};
+
+// ============================================
+// MAIN APP - Routes to either Intake or Admin
+// ============================================
+function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/intake" element={<IntakeForm />} />
+        <Route path="/*" element={<AdminApp />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
