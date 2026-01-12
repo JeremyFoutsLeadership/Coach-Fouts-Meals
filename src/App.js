@@ -17,6 +17,7 @@ import {
   GOAL_ADJUSTMENTS 
 } from './lib/calculations';
 import { downloadMealPlanPDF, generateMealPlanText } from './lib/pdfGenerator';
+import IntakeForm from './pages/IntakeForm';
 import './App.css';
 
 // Create context for global state
@@ -1097,21 +1098,29 @@ function App() {
   return (
     <AppContext.Provider value={contextValue}>
       <BrowserRouter>
-        <div className="app">
-          <Header />
-          <main className="main">
-            <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/athletes" element={<AthletesList />} />
-              <Route path="/athletes/new" element={<AthleteForm />} />
-              <Route path="/athletes/:id" element={<AthleteDetail />} />
-              <Route path="/athletes/:id/edit" element={<AthleteForm />} />
-              <Route path="/builder" element={<PlanBuilder />} />
-              <Route path="/meals" element={<SavedMeals />} />
-              <Route path="/foods" element={<FoodDatabase />} />
-            </Routes>
-          </main>
-        </div>
+        <Routes>
+          {/* Public intake form - NO header/nav */}
+          <Route path="/intake" element={<IntakeForm />} />
+          
+          {/* Admin routes - WITH header/nav */}
+          <Route path="/*" element={
+            <div className="app">
+              <Header />
+              <main className="main">
+                <Routes>
+                  <Route path="/" element={<Dashboard />} />
+                  <Route path="/athletes" element={<AthletesList />} />
+                  <Route path="/athletes/new" element={<AthleteForm />} />
+                  <Route path="/athletes/:id" element={<AthleteDetail />} />
+                  <Route path="/athletes/:id/edit" element={<AthleteForm />} />
+                  <Route path="/builder" element={<PlanBuilder />} />
+                  <Route path="/meals" element={<SavedMeals />} />
+                  <Route path="/foods" element={<FoodDatabase />} />
+                </Routes>
+              </main>
+            </div>
+          } />
+        </Routes>
       </BrowserRouter>
     </AppContext.Provider>
   );
