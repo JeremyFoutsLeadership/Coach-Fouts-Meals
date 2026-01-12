@@ -1118,12 +1118,15 @@ const AdminApp = () => {
 // MAIN APP - Routes to either Intake or Admin
 // ============================================
 function App() {
+  // If on intake page, render just the form (no header/nav)
+  if (window.location.pathname === '/intake') {
+    return <IntakeForm />;
+  }
+  
+  // Otherwise render the full admin app
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/intake" element={<IntakeForm />} />
-        <Route path="/*" element={<AdminApp />} />
-      </Routes>
+      <AdminApp />
     </BrowserRouter>
   );
 }
