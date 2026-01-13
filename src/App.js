@@ -18,6 +18,7 @@ import {
 } from './lib/calculations';
 import { downloadMealPlanPDF, generateMealPlanText } from './lib/pdfGenerator';
 import IntakeForm from './pages/IntakeForm';
+import IntakeAdmin from './pages/IntakeAdmin';
 import './App.css';
 
 // Create context for global state
@@ -1121,6 +1122,11 @@ function App() {
   // If on intake page, render just the form (no header/nav)
   if (window.location.pathname === '/intake') {
     return <IntakeForm />;
+  }
+  
+  // If on admin intake page, render the admin dashboard
+  if (window.location.pathname === '/admin/intake') {
+    return <IntakeAdmin />;
   }
   
   // Otherwise render the full admin app
