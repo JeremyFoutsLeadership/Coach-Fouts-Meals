@@ -1,406 +1,400 @@
-import { useState, useEffect } from 'react';
+// src/pages/IntakeForm.jsx
+// Self-contained intake form with inline Supabase client
+import { useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
-// Initialize Supabase directly in this file
-const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
-const supabaseKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
-const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null;
+// Initialize Supabase client directly
+const supabase = createClient(
+  'https://yrzyqenakawldeqtrtgb.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlyenlxZW5ha2F3bGRlcXRydGdiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzY3MTcyMjMsImV4cCI6MjA1MjI5MzIyM30.jGqzXwIKlWwVVep3qCXuGvolXJF_WaDzNTIsNarkWyk'
+);
 
-export default function IntakeAdmin() {
-  const [submissions, setSubmissions] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('all');
-  const [selectedSubmission, setSelectedSubmission] = useState(null);
-  const [error, setError] = useState(null);
+const PROTEINS = [
+  'Chicken Breast', 'Chicken Thighs', 'Ground Beef', 'Steak', 'Pork Chops',
+  'Turkey', 'Ham', 'Bacon', 'Salmon', 'Tilapia', 'Shrimp', 'Eggs',
+  'Greek Yogurt', 'Cottage Cheese', 'Beef Jerky', 'Deli Meat'
+];
 
-  useEffect(() => {
-    loadSubmissions();
-  }, []);
+const CARBS = [
+  'White Rice', 'Brown Rice', 'Pasta', 'Bread', 'Tortillas', 'Oatmeal',
+  'Potatoes', 'Sweet Potatoes', 'Quinoa', 'Bagels', 'Cereal', 'Pancakes',
+  'Waffles', 'Grits', 'Crackers', 'Pretzels'
+];
 
-  const loadSubmissions = async () => {
-    if (!supabase) {
-      setError('Supabase not configured');
-      setLoading(false);
-      return;
-    }
-    
+const FRUITS = [
+  'Bananas', 'Apples', 'Oranges', 'Strawberries', 'Blueberries', 'Grapes',
+  'Watermelon', 'Pineapple', 'Mango', 'Peaches', 'Cantaloupe', 'Kiwi'
+];
+
+const VEGETABLES = [
+  'Broccoli', 'Green Beans', 'Corn', 'Carrots', 'Spinach', 'Lettuce',
+  'Bell Peppers', 'Asparagus', 'Peas', 'Zucchini', 'Cucumbers', 'Tomatoes'
+];
+
+const SPORTS = [
+  'Baseball', 'Basketball', 'Football', 'Soccer', 'Softball', 'Wrestling',
+  'Track & Field', 'Swimming', 'Tennis', 'Golf', 'Volleyball', 'Other'
+];
+
+export default function IntakeForm() {
+  const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  
+  const [form, setForm] = useState({
+    athlete_name: '',
+    parent_name: '',
+    email: '',
+    phone: '',
+    age: '',
+    sport: '',
+    position: '',
+    current_weight: '',
+    goal_weight: '',
+    height_feet: '',
+    height_inches: '',
+    primary_goal: 'gain',
+    timeline: '',
+    proteins_liked: [],
+    proteins_disliked: [],
+    carbs_liked: [],
+    carbs_disliked: [],
+    fruits_liked: [],
+    vegetables_liked: [],
+    allergies: [],
+    dietary_restrictions: [],
+    foods_to_avoid: '',
+    meals_per_day: 6,
+    cooks_own_meals: false,
+    has_microwave_at_school: true,
+    meal_prep_help: 'some',
+    grocery_budget: '',
+    current_supplements: '',
+    notes: ''
+  });
+
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setForm(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+  };
+
+  const toggleArrayItem = (field, item) => {
+    setForm(prev => ({
+      ...prev,
+      [field]: prev[field].includes(item)
+        ? prev[field].filter(i => i !== item)
+        : [...prev[field], item]
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
     try {
-      setLoading(true);
-      const { data, error } = await supabase
+      const submissionData = {
+        ...form,
+        age: form.age ? parseInt(form.age) : null,
+        current_weight: form.current_weight ? parseFloat(form.current_weight) : null,
+        goal_weight: form.goal_weight ? parseFloat(form.goal_weight) : null,
+        height_feet: form.height_feet ? parseInt(form.height_feet) : null,
+        height_inches: form.height_inches ? parseInt(form.height_inches) : null,
+        meals_per_day: parseInt(form.meals_per_day),
+        status: 'new'
+      };
+
+      console.log('Submitting form data:', submissionData);
+
+      const { data, error: supabaseError } = await supabase
         .from('intake_forms')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      setSubmissions(data || []);
+        .insert([submissionData])
+        .select();
+
+      if (supabaseError) {
+        console.error('Supabase error:', supabaseError);
+        throw supabaseError;
+      }
+
+      console.log('Form submitted successfully:', data);
+      setSubmitted(true);
     } catch (err) {
-      console.error('Error loading submissions:', err);
-      setError(err.message);
+      console.error('Submission error:', err);
+      setError(`There was an error submitting the form: ${err.message || 'Unknown error'}. Please try again or contact Coach Fouts directly.`);
     } finally {
       setLoading(false);
     }
   };
 
-  const updateStatus = async (id, newStatus) => {
-    if (!supabase) return;
-    
-    try {
-      const { error } = await supabase
-        .from('intake_forms')
-        .update({ status: newStatus })
-        .eq('id', id);
-      
-      if (error) throw error;
-      await loadSubmissions();
-      setSelectedSubmission(null);
-    } catch (err) {
-      console.error('Error updating status:', err);
-      alert('Error updating status: ' + err.message);
-    }
-  };
-
-  const filteredSubmissions = submissions.filter(s => {
-    if (filter === 'all') return true;
-    if (filter === 'new') return !s.status || s.status === 'new';
-    return s.status === filter;
-  });
-
-  const getStatusBadge = (status) => {
-    const styles = {
-      new: { background: '#dcfce7', color: '#166534' },
-      contacted: { background: '#fef3c7', color: '#92400e' },
-      converted: { background: '#dbeafe', color: '#1e40af' }
-    };
-    const displayStatus = status || 'new';
+  if (submitted) {
     return (
-      <span style={{
-        padding: '4px 12px',
-        borderRadius: '12px',
-        fontSize: '12px',
-        fontWeight: '600',
-        textTransform: 'uppercase',
-        ...styles[displayStatus] || styles.new
-      }}>
-        {displayStatus}
-      </span>
-    );
-  };
-
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit'
-    });
-  };
-
-  if (loading) {
-    return (
-      <div style={{ minHeight: '100vh', background: '#1e293b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ color: 'white', fontSize: '18px' }}>Loading submissions...</div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div style={{ minHeight: '100vh', background: '#1e293b', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '16px' }}>
-        <div style={{ color: '#ef4444', fontSize: '18px' }}>Error: {error}</div>
-        <button onClick={loadSubmissions} style={{ padding: '8px 16px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>
-          Retry
-        </button>
+      <div className="min-h-screen bg-gradient-to-br from-blue-900 to-blue-700 flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md text-center">
+          <div className="text-6xl mb-4">✅</div>
+          <h1 className="text-2xl font-bold text-gray-800 mb-2">You're All Set!</h1>
+          <p className="text-gray-600 mb-6">
+            Thanks for submitting your intake form. Coach Fouts will review your information 
+            and reach out within 24-48 hours to discuss your personalized nutrition plan.
+          </p>
+          <a 
+            href="https://jeremyfouts.com" 
+            className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition"
+          >
+            Back to JeremyFouts.com
+          </a>
+        </div>
       </div>
     );
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#1e293b', padding: '32px' }}>
-      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-        {/* Header */}
-        <div style={{ marginBottom: '32px' }}>
-          <h1 style={{ fontSize: '28px', fontWeight: 'bold', color: 'white', marginBottom: '8px' }}>
-            📋 Intake Form Submissions
+    <div className="min-h-screen bg-gradient-to-br from-blue-900 to-blue-700 py-8 px-4">
+      <div className="max-w-3xl mx-auto">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
+            🏆 Athlete Nutrition Intake Form
           </h1>
-          <p style={{ color: '#94a3b8' }}>
-            Manage athlete intake form submissions
+          <p className="text-blue-200">
+            Coach Fouts Sports Nutrition | NCSF Certified
           </p>
         </div>
 
-        {/* Stats */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '24px' }}>
-          {[
-            { label: 'Total', count: submissions.length, color: '#6366f1' },
-            { label: 'New', count: submissions.filter(s => !s.status || s.status === 'new').length, color: '#22c55e' },
-            { label: 'Contacted', count: submissions.filter(s => s.status === 'contacted').length, color: '#f59e0b' },
-            { label: 'Converted', count: submissions.filter(s => s.status === 'converted').length, color: '#3b82f6' }
-          ].map(stat => (
-            <div key={stat.label} style={{ background: '#334155', borderRadius: '12px', padding: '20px', textAlign: 'center' }}>
-              <div style={{ fontSize: '32px', fontWeight: 'bold', color: stat.color }}>{stat.count}</div>
-              <div style={{ color: '#94a3b8', fontSize: '14px' }}>{stat.label}</div>
+        <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-2xl overflow-hidden">
+          <div className="bg-blue-600 text-white px-6 py-4">
+            <h2 className="text-xl font-bold">1. Basic Information</h2>
+          </div>
+          <div className="p-6 space-y-4">
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Athlete Name *</label>
+                <input type="text" name="athlete_name" value={form.athlete_name} onChange={handleChange} required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="First and Last Name" />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Parent/Guardian Name</label>
+                <input type="text" name="parent_name" value={form.parent_name} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Parent Name" />
+              </div>
             </div>
-          ))}
-        </div>
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Email *</label>
+                <input type="email" name="email" value={form.email} onChange={handleChange} required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="email@example.com" />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Phone Number</label>
+                <input type="tel" name="phone" value={form.phone} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="(555) 555-5555" />
+              </div>
+            </div>
+            <div className="grid md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Age *</label>
+                <input type="number" name="age" value={form.age} onChange={handleChange} required min="8" max="25" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Age" />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Sport *</label>
+                <select name="sport" value={form.sport} onChange={handleChange} required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                  <option value="">Select Sport</option>
+                  {SPORTS.map(sport => (<option key={sport} value={sport}>{sport}</option>))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Position</label>
+                <input type="text" name="position" value={form.position} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="e.g., Pitcher, QB" />
+              </div>
+            </div>
+          </div>
 
-        {/* Filter Tabs */}
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
-          {['all', 'new', 'contacted', 'converted'].map(status => (
-            <button
-              key={status}
-              onClick={() => setFilter(status)}
-              style={{
-                padding: '8px 16px',
-                borderRadius: '8px',
-                border: 'none',
-                cursor: 'pointer',
-                fontWeight: '500',
-                background: filter === status ? '#3b82f6' : '#334155',
-                color: filter === status ? 'white' : '#94a3b8'
-              }}
-            >
-              {status.charAt(0).toUpperCase() + status.slice(1)}
+          <div className="bg-blue-600 text-white px-6 py-4">
+            <h2 className="text-xl font-bold">2. Physical Stats & Goals</h2>
+          </div>
+          <div className="p-6 space-y-4">
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Current Weight (lbs) *</label>
+                <input type="number" name="current_weight" value={form.current_weight} onChange={handleChange} required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="e.g., 150" />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Goal Weight (lbs)</label>
+                <input type="number" name="goal_weight" value={form.goal_weight} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="e.g., 170" />
+              </div>
+            </div>
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Height</label>
+                <div className="flex gap-2">
+                  <input type="number" name="height_feet" value={form.height_feet} onChange={handleChange} min="4" max="7" className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Feet" />
+                  <input type="number" name="height_inches" value={form.height_inches} onChange={handleChange} min="0" max="11" className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Inches" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Primary Goal *</label>
+                <select name="primary_goal" value={form.primary_goal} onChange={handleChange} required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                  <option value="gain">Gain Weight / Build Muscle</option>
+                  <option value="lose">Lose Weight / Cut Fat</option>
+                  <option value="maintain">Maintain Weight</option>
+                  <option value="performance">Improve Performance</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Timeline / Upcoming Season</label>
+              <input type="text" name="timeline" value={form.timeline} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="e.g., Spring baseball starts March 1st" />
+            </div>
+          </div>
+
+          <div className="bg-blue-600 text-white px-6 py-4">
+            <h2 className="text-xl font-bold">3. Food Preferences</h2>
+            <p className="text-blue-200 text-sm">Check all foods you LIKE and will eat</p>
+          </div>
+          <div className="p-6 space-y-6">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Proteins I Like ✓</label>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                {PROTEINS.map(protein => (
+                  <label key={protein} className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={form.proteins_liked.includes(protein)} onChange={() => toggleArrayItem('proteins_liked', protein)} className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500" />
+                    <span className="text-sm text-gray-700">{protein}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Carbs I Like ✓</label>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                {CARBS.map(carb => (
+                  <label key={carb} className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={form.carbs_liked.includes(carb)} onChange={() => toggleArrayItem('carbs_liked', carb)} className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500" />
+                    <span className="text-sm text-gray-700">{carb}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Fruits I Like ✓</label>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                {FRUITS.map(fruit => (
+                  <label key={fruit} className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={form.fruits_liked.includes(fruit)} onChange={() => toggleArrayItem('fruits_liked', fruit)} className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500" />
+                    <span className="text-sm text-gray-700">{fruit}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Vegetables I Like ✓</label>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                {VEGETABLES.map(veg => (
+                  <label key={veg} className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={form.vegetables_liked.includes(veg)} onChange={() => toggleArrayItem('vegetables_liked', veg)} className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500" />
+                    <span className="text-sm text-gray-700">{veg}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Foods You Absolutely WON'T Eat</label>
+              <textarea name="foods_to_avoid" value={form.foods_to_avoid} onChange={handleChange} rows={2} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="List any foods you refuse to eat..." />
+            </div>
+          </div>
+
+          <div className="bg-blue-600 text-white px-6 py-4">
+            <h2 className="text-xl font-bold">4. Allergies & Restrictions</h2>
+          </div>
+          <div className="p-6 space-y-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Food Allergies (check all that apply)</label>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                {['Peanuts', 'Tree Nuts', 'Dairy', 'Eggs', 'Shellfish', 'Fish', 'Wheat/Gluten', 'Soy'].map(allergy => (
+                  <label key={allergy} className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={form.allergies.includes(allergy)} onChange={() => toggleArrayItem('allergies', allergy)} className="w-4 h-4 text-red-600 rounded focus:ring-red-500" />
+                    <span className="text-sm text-gray-700">{allergy}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Dietary Restrictions</label>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                {['Gluten-Free', 'Dairy-Free', 'Vegetarian', 'No Pork', 'No Red Meat', 'Kosher'].map(restriction => (
+                  <label key={restriction} className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={form.dietary_restrictions.includes(restriction)} onChange={() => toggleArrayItem('dietary_restrictions', restriction)} className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500" />
+                    <span className="text-sm text-gray-700">{restriction}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-blue-600 text-white px-6 py-4">
+            <h2 className="text-xl font-bold">5. Meal Logistics</h2>
+          </div>
+          <div className="p-6 space-y-4">
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Meals Per Day</label>
+                <select name="meals_per_day" value={form.meals_per_day} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                  <option value={4}>4 (Breakfast, Lunch, Dinner, Snack)</option>
+                  <option value={5}>5 (+ After School Snack)</option>
+                  <option value={6}>6 (+ Evening Shake) - Recommended</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Meal Prep Help at Home</label>
+                <select name="meal_prep_help" value={form.meal_prep_help} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                  <option value="none">None - I prep everything myself</option>
+                  <option value="some">Some - Parents help with some meals</option>
+                  <option value="full">Full - Parents prepare most meals</option>
+                </select>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-6">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" name="has_microwave_at_school" checked={form.has_microwave_at_school} onChange={handleChange} className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500" />
+                <span className="text-gray-700">Microwave available at school</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" name="cooks_own_meals" checked={form.cooks_own_meals} onChange={handleChange} className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500" />
+                <span className="text-gray-700">Athlete cooks their own meals</span>
+              </label>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Weekly Grocery Budget (optional)</label>
+              <input type="text" name="grocery_budget" value={form.grocery_budget} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="e.g., $150/week" />
+            </div>
+          </div>
+
+          <div className="bg-blue-600 text-white px-6 py-4">
+            <h2 className="text-xl font-bold">6. Additional Information</h2>
+          </div>
+          <div className="p-6 space-y-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Current Supplements (if any)</label>
+              <input type="text" name="current_supplements" value={form.current_supplements} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="e.g., Protein powder, creatine, multivitamin" />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Anything Else Coach Fouts Should Know?</label>
+              <textarea name="notes" value={form.notes} onChange={handleChange} rows={3} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Medical conditions, schedule constraints, picky eater, etc." />
+            </div>
+          </div>
+
+          <div className="p-6 bg-gray-50 border-t">
+            {error && (
+              <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg">{error}</div>
+            )}
+            <button type="submit" disabled={loading} className="w-full bg-blue-600 text-white py-4 rounded-lg font-bold text-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed">
+              {loading ? 'Submitting...' : '🚀 Submit Intake Form'}
             </button>
-          ))}
-          <button
-            onClick={loadSubmissions}
-            style={{
-              marginLeft: 'auto',
-              padding: '8px 16px',
-              borderRadius: '8px',
-              border: 'none',
-              cursor: 'pointer',
-              fontWeight: '500',
-              background: '#334155',
-              color: '#94a3b8'
-            }}
-          >
-            🔄 Refresh
-          </button>
-        </div>
-
-        {/* Submissions List */}
-        {filteredSubmissions.length === 0 ? (
-          <div style={{ background: '#334155', borderRadius: '12px', padding: '48px', textAlign: 'center' }}>
-            <div style={{ fontSize: '48px', marginBottom: '16px' }}>📭</div>
-            <div style={{ color: '#94a3b8', fontSize: '18px' }}>No submissions found</div>
+            <p className="text-center text-sm text-gray-500 mt-4">
+              By submitting, you agree to be contacted by Coach Fouts Sports Nutrition.
+            </p>
           </div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {filteredSubmissions.map(submission => (
-              <div
-                key={submission.id}
-                onClick={() => setSelectedSubmission(submission)}
-                style={{
-                  background: '#334155',
-                  borderRadius: '12px',
-                  padding: '20px',
-                  cursor: 'pointer',
-                  border: '2px solid transparent'
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-                      <span style={{ fontSize: '18px', fontWeight: '600', color: 'white' }}>
-                        {submission.athlete_name}
-                      </span>
-                      {getStatusBadge(submission.status)}
-                    </div>
-                    <div style={{ display: 'flex', gap: '16px', color: '#94a3b8', fontSize: '14px', flexWrap: 'wrap' }}>
-                      <span>🏀 {submission.sport || 'N/A'}</span>
-                      <span>📧 {submission.email}</span>
-                      <span>⚖️ {submission.current_weight || '?'} lbs → {submission.goal_weight || '?'} lbs</span>
-                      <span>🎯 {submission.primary_goal || 'N/A'}</span>
-                    </div>
-                  </div>
-                  <div style={{ color: '#64748b', fontSize: '13px' }}>
-                    {formatDate(submission.created_at)}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+        </form>
 
-        {/* Detail Modal */}
-        {selectedSubmission && (
-          <div
-            style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              background: 'rgba(0,0,0,0.7)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: '20px',
-              zIndex: 1000
-            }}
-            onClick={() => setSelectedSubmission(null)}
-          >
-            <div
-              style={{
-                background: '#1e293b',
-                borderRadius: '16px',
-                padding: '32px',
-                maxWidth: '700px',
-                width: '100%',
-                maxHeight: '90vh',
-                overflow: 'auto'
-              }}
-              onClick={e => e.stopPropagation()}
-            >
-              {/* Modal Header */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
-                <div>
-                  <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white', marginBottom: '4px' }}>
-                    {selectedSubmission.athlete_name}
-                  </h2>
-                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                    {getStatusBadge(selectedSubmission.status)}
-                    <span style={{ color: '#64748b', fontSize: '13px' }}>
-                      Submitted {formatDate(selectedSubmission.created_at)}
-                    </span>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setSelectedSubmission(null)}
-                  style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '24px', cursor: 'pointer' }}
-                >
-                  ×
-                </button>
-              </div>
-
-              {/* Contact Info */}
-              <div style={{ background: '#334155', borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
-                <h3 style={{ color: '#94a3b8', fontSize: '12px', textTransform: 'uppercase', marginBottom: '12px' }}>Contact Info</h3>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', color: 'white' }}>
-                  <div><strong>Email:</strong> {selectedSubmission.email}</div>
-                  <div><strong>Phone:</strong> {selectedSubmission.phone || 'N/A'}</div>
-                  <div><strong>Parent:</strong> {selectedSubmission.parent_name || 'N/A'}</div>
-                </div>
-              </div>
-
-              {/* Physical Stats */}
-              <div style={{ background: '#334155', borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
-                <h3 style={{ color: '#94a3b8', fontSize: '12px', textTransform: 'uppercase', marginBottom: '12px' }}>Physical Stats</h3>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', color: 'white' }}>
-                  <div><strong>Age:</strong> {selectedSubmission.age}</div>
-                  <div><strong>Sport:</strong> {selectedSubmission.sport}</div>
-                  <div><strong>Position:</strong> {selectedSubmission.position || 'N/A'}</div>
-                  <div><strong>Current Weight:</strong> {selectedSubmission.current_weight} lbs</div>
-                  <div><strong>Goal Weight:</strong> {selectedSubmission.goal_weight || 'N/A'} lbs</div>
-                  <div><strong>Height:</strong> {selectedSubmission.height_feet}'{selectedSubmission.height_inches}"</div>
-                  <div><strong>Primary Goal:</strong> {selectedSubmission.primary_goal}</div>
-                  <div><strong>Timeline:</strong> {selectedSubmission.timeline || 'N/A'}</div>
-                </div>
-              </div>
-
-              {/* Food Preferences */}
-              <div style={{ background: '#334155', borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
-                <h3 style={{ color: '#94a3b8', fontSize: '12px', textTransform: 'uppercase', marginBottom: '12px' }}>Food Preferences</h3>
-                <div style={{ color: 'white', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <div><strong>Proteins:</strong> {selectedSubmission.proteins_liked?.join(', ') || 'None selected'}</div>
-                  <div><strong>Carbs:</strong> {selectedSubmission.carbs_liked?.join(', ') || 'None selected'}</div>
-                  <div><strong>Fruits:</strong> {selectedSubmission.fruits_liked?.join(', ') || 'None selected'}</div>
-                  <div><strong>Vegetables:</strong> {selectedSubmission.vegetables_liked?.join(', ') || 'None selected'}</div>
-                  <div><strong>Won't Eat:</strong> {selectedSubmission.foods_to_avoid || 'None specified'}</div>
-                </div>
-              </div>
-
-              {/* Restrictions */}
-              <div style={{ background: '#334155', borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
-                <h3 style={{ color: '#94a3b8', fontSize: '12px', textTransform: 'uppercase', marginBottom: '12px' }}>Allergies & Restrictions</h3>
-                <div style={{ color: 'white', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <div><strong>Allergies:</strong> {selectedSubmission.allergies?.join(', ') || 'None'}</div>
-                  <div><strong>Dietary Restrictions:</strong> {selectedSubmission.dietary_restrictions?.join(', ') || 'None'}</div>
-                </div>
-              </div>
-
-              {/* Logistics */}
-              <div style={{ background: '#334155', borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
-                <h3 style={{ color: '#94a3b8', fontSize: '12px', textTransform: 'uppercase', marginBottom: '12px' }}>Meal Logistics</h3>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', color: 'white' }}>
-                  <div><strong>Meals/Day:</strong> {selectedSubmission.meals_per_day}</div>
-                  <div><strong>Meal Prep Help:</strong> {selectedSubmission.meal_prep_help}</div>
-                  <div><strong>Microwave at School:</strong> {selectedSubmission.has_microwave_at_school ? 'Yes' : 'No'}</div>
-                  <div><strong>Cooks Own Meals:</strong> {selectedSubmission.cooks_own_meals ? 'Yes' : 'No'}</div>
-                  <div><strong>Budget:</strong> {selectedSubmission.grocery_budget || 'N/A'}</div>
-                  <div><strong>Supplements:</strong> {selectedSubmission.current_supplements || 'None'}</div>
-                </div>
-              </div>
-
-              {/* Notes */}
-              {selectedSubmission.notes && (
-                <div style={{ background: '#334155', borderRadius: '12px', padding: '16px', marginBottom: '24px' }}>
-                  <h3 style={{ color: '#94a3b8', fontSize: '12px', textTransform: 'uppercase', marginBottom: '12px' }}>Additional Notes</h3>
-                  <div style={{ color: 'white' }}>{selectedSubmission.notes}</div>
-                </div>
-              )}
-
-              {/* Actions */}
-              <div style={{ display: 'flex', gap: '12px' }}>
-                {(!selectedSubmission.status || selectedSubmission.status === 'new') && (
-                  <button
-                    onClick={() => updateStatus(selectedSubmission.id, 'contacted')}
-                    style={{
-                      flex: 1,
-                      padding: '12px',
-                      borderRadius: '8px',
-                      border: 'none',
-                      cursor: 'pointer',
-                      fontWeight: '600',
-                      background: '#f59e0b',
-                      color: 'white'
-                    }}
-                  >
-                    ✓ Mark as Contacted
-                  </button>
-                )}
-                {selectedSubmission.status !== 'converted' && (
-                  <button
-                    onClick={() => updateStatus(selectedSubmission.id, 'converted')}
-                    style={{
-                      flex: 1,
-                      padding: '12px',
-                      borderRadius: '8px',
-                      border: 'none',
-                      cursor: 'pointer',
-                      fontWeight: '600',
-                      background: '#22c55e',
-                      color: 'white'
-                    }}
-                  >
-                    🎉 Mark as Converted
-                  </button>
-                )}
-                <button
-                  onClick={() => setSelectedSubmission(null)}
-                  style={{
-                    padding: '12px 24px',
-                    borderRadius: '8px',
-                    border: 'none',
-                    cursor: 'pointer',
-                    fontWeight: '600',
-                    background: '#475569',
-                    color: 'white'
-                  }}
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Back Link */}
-        <div style={{ marginTop: '32px', textAlign: 'center' }}>
-          <a href="/" style={{ color: '#64748b', textDecoration: 'none', fontSize: '14px' }}>
-            ← Back to Meal Plan Builder
-          </a>
+        <div className="text-center mt-8 text-blue-200 text-sm">
+          <p>Coach Fouts Sports Nutrition | NCSF Certified</p>
+          <p>JeremyFouts.com</p>
         </div>
       </div>
     </div>
