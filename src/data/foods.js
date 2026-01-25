@@ -90,6 +90,9 @@ export const FOOD_DATABASE = {
     { id: 'd17', name: 'American Cheese', unit: 'oz', calories: 94, protein: 5, carbs: 2, fat: 7.5, category: 'dairy' },
     { id: 'd18', name: 'Evaporated Milk (fat free)', unit: 'oz', calories: 25, protein: 2.4, carbs: 3.6, fat: 0.1, category: 'dairy' },
     { id: 'd19', name: 'Light Cheddar Cheese', unit: 'oz', calories: 70, protein: 8, carbs: 1, fat: 4, category: 'dairy' },
+    // NEW: Ice Cream (USDA verified)
+    { id: 'd20', name: 'Vanilla Ice Cream', unit: '1/2 cup', calories: 137, protein: 2.3, carbs: 16, fat: 7.3, category: 'dairy' },
+    { id: 'd21', name: 'Chocolate Ice Cream', unit: '1/2 cup', calories: 143, protein: 2.5, carbs: 19, fat: 7.3, category: 'dairy' },
   ],
   fats: [
     { id: 'fa1', name: 'Avocado', unit: 'whole', calories: 322, protein: 4, carbs: 17, fat: 29, category: 'fats' },
@@ -144,10 +147,18 @@ export const FOOD_DATABASE = {
     { id: 'e19', name: 'Brown Sugar', unit: 'tbsp', calories: 52, protein: 0, carbs: 13, fat: 0, category: 'extras' },
     { id: 'e20', name: 'Cajun Seasoning', unit: 'tbsp', calories: 8, protein: 0.4, carbs: 1.7, fat: 0.3, category: 'extras' },
   ],
+  snacks: [
+    // NEW: USDA-verified snack items
+    { id: 's1', name: 'Granola', unit: '1/4 cup', calories: 120, protein: 3, carbs: 20, fat: 4, category: 'snacks' },
+    { id: 's2', name: 'Trail Mix (nuts, seeds, dried fruit)', unit: 'oz', calories: 131, protein: 4, carbs: 13, fat: 8, category: 'snacks' },
+    { id: 's3', name: 'Beef Meat Sticks/Jerky', unit: 'oz', calories: 82, protein: 7, carbs: 2, fat: 5, category: 'snacks' },
+  ],
   corvive: [
-    { id: 'cv1', name: 'CorVive Protein+Collagen Sachet', unit: 'sachet', calories: 130, protein: 17, carbs: 9, fat: 3, category: 'corvive' },
-    { id: 'cv2', name: 'CorVive Hydrate', unit: 'packet', calories: 15, protein: 0, carbs: 4, fat: 0, category: 'corvive' },
-    { id: 'cv3', name: 'CorVive Creatine', unit: '5g scoop', calories: 0, protein: 0, carbs: 0, fat: 0, category: 'corvive' },
+    // UPDATED: Corrected macros from actual nutrition labels (Jan 2026)
+    { id: 'cv1', name: 'CorVive Protein+Collagen Chocolate', unit: 'sachet', calories: 120, protein: 23, carbs: 2, fat: 1.5, category: 'corvive' },
+    { id: 'cv2', name: 'CorVive Protein+Collagen Vanilla', unit: 'sachet', calories: 110, protein: 23, carbs: 2, fat: 1.5, category: 'corvive' },
+    { id: 'cv3', name: 'CorVive Hydrate', unit: 'stick pack', calories: 30, protein: 0, carbs: 6, fat: 0, category: 'corvive' },
+    { id: 'cv4', name: 'CorVive Creatine', unit: '5g scoop', calories: 0, protein: 0, carbs: 0, fat: 0, category: 'corvive' },
   ],
   restaurant: [
     { id: 'r1', name: 'Chipotle Rice', unit: 'cup', calories: 210, protein: 4, carbs: 40, fat: 4, category: 'restaurant' },
@@ -179,6 +190,30 @@ export const FOOD_DATABASE = {
     { id: 'm9', name: 'Apple Pie Overnight Oats (3:1)', unit: 'serving', calories: 625, protein: 35, carbs: 105, fat: 18, category: 'meals' },
     { id: 'm10', name: 'PB Banana Overnight Oats (3:1)', unit: 'serving', calories: 655, protein: 36, carbs: 107, fat: 22, category: 'meals' },
     { id: 'm11', name: 'Blueberry Muffin Overnight Oats (3:1)', unit: 'serving', calories: 615, protein: 35, carbs: 105, fat: 18, category: 'meals' },
+    
+    // ============================================
+    // NEW RECIPES - January 2026
+    // ============================================
+    
+    // SNACKS & SMOOTHIES
+    { id: 'm12', name: "J's Rice Crispy Treats (CorVive)", unit: 'treat', calories: 151, protein: 6, carbs: 20, fat: 6, category: 'meals' },
+    { id: 'm13', name: 'Angel Food Smoothie (CorVive)', unit: 'smoothie', calories: 574, protein: 56, carbs: 64, fat: 11, category: 'meals' },
+    
+    // BREAKFAST
+    { id: 'm14', name: 'Steak and Egg Hash', unit: 'serving', calories: 475, protein: 38, carbs: 38, fat: 20, category: 'meals' },
+    
+    // HIGH PROTEIN DINNERS
+    { id: 'm15', name: 'Shrimp Stir-Fry with Rice Noodles', unit: 'serving', calories: 695, protein: 61, carbs: 61, fat: 23, category: 'meals' },
+    { id: 'm16', name: 'Taco Ring', unit: 'slice', calories: 330, protein: 18, carbs: 23, fat: 18, category: 'meals' },
+    { id: 'm17', name: 'Chicken Pot Pie with Gnocchi', unit: 'serving', calories: 890, protein: 42, carbs: 58, fat: 46, category: 'meals' },
+    { id: 'm18', name: 'Meatball Subs (Venison/Elk)', unit: 'sub', calories: 1004, protein: 69, carbs: 83, fat: 47, category: 'meals' },
+    { id: 'm19', name: 'Italian Herb Sandwich', unit: 'sandwich', calories: 762, protein: 35, carbs: 114, fat: 45, category: 'meals' },
+    { id: 'm20', name: 'Garlic Butter Sirloin Alfredo', unit: 'serving', calories: 663, protein: 43, carbs: 5, fat: 53, category: 'meals' },
+    { id: 'm21', name: 'Pickle Chicken Sandwich', unit: 'sandwich', calories: 578, protein: 36, carbs: 26, fat: 37, category: 'meals' },
+    { id: 'm22', name: 'Shrimp Cajun Pasta (no sour cream)', unit: 'serving', calories: 489, protein: 36, carbs: 42, fat: 16, category: 'meals' },
+    { id: 'm23', name: 'Shrimp Cajun Pasta (with sour cream)', unit: 'serving', calories: 628, protein: 38, carbs: 46, fat: 31, category: 'meals' },
+    { id: 'm24', name: 'Loaded Potato Meatloaf Casserole', unit: 'serving', calories: 571, protein: 45, carbs: 33, fat: 28, category: 'meals' },
+    { id: 'm25', name: 'Buffalo Chicken Pinwheels', unit: 'serving', calories: 593, protein: 38, carbs: 37, fat: 32, category: 'meals' },
   ],
 };
 
@@ -207,6 +242,7 @@ export const FOOD_CATEGORIES = [
   { id: 'dairy', name: 'Dairy' },
   { id: 'fats', name: 'Fats & Nuts' },
   { id: 'vegetables', name: 'Vegetables' },
+  { id: 'snacks', name: 'Snacks' },
   { id: 'extras', name: 'Extras & Sauces' },
   { id: 'corvive', name: 'CorVive' },
   { id: 'restaurant', name: 'Restaurant' },
