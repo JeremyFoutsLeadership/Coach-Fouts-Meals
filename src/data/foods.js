@@ -25,6 +25,13 @@ export const FOOD_DATABASE = {
     { id: 'p20', name: 'Cod (cooked)', unit: 'oz', calories: 30, protein: 6.5, carbs: 0, fat: 0.3, category: 'proteins' },
     { id: 'p21', name: 'Beef Sirloin (cooked)', unit: 'oz', calories: 52, protein: 8.2, carbs: 0, fat: 2, category: 'proteins' },
     { id: 'p22', name: 'Ground Beef 90/10 (cooked)', unit: 'oz', calories: 55, protein: 7.8, carbs: 0, fat: 2.6, category: 'proteins' },
+    // NEW proteins
+    { id: 'p23', name: 'Bacon (cooked)', unit: 'slice', calories: 43, protein: 3, carbs: 0, fat: 3.3, category: 'proteins' },
+    { id: 'p24', name: 'Chicken Breakfast Sausage (cooked)', unit: 'oz', calories: 45, protein: 5, carbs: 1, fat: 2.5, category: 'proteins' },
+    { id: 'p25', name: 'Tuna Steak (cooked)', unit: 'oz', calories: 44, protein: 9, carbs: 0, fat: 0.5, category: 'proteins' },
+    { id: 'p26', name: 'Deli Ham', unit: 'oz', calories: 30, protein: 5, carbs: 1, fat: 1, category: 'proteins' },
+    { id: 'p27', name: 'Deli Chicken', unit: 'oz', calories: 29, protein: 5.5, carbs: 0.5, fat: 0.5, category: 'proteins' },
+    { id: 'p28', name: 'Deli Roast Beef', unit: 'oz', calories: 30, protein: 6, carbs: 0, fat: 0.5, category: 'proteins' },
   ],
   carbs: [
     { id: 'c1', name: 'White Rice (cooked)', unit: 'cup', calories: 205, protein: 4.3, carbs: 45, fat: 0.4, category: 'carbs' },
@@ -54,6 +61,12 @@ export const FOOD_DATABASE = {
     { id: 'c25', name: 'Macaroni (cooked)', unit: 'cup', calories: 220, protein: 8, carbs: 43, fat: 1.3, category: 'carbs' },
     { id: 'c26', name: 'Brioche Bread', unit: 'slice', calories: 120, protein: 4, carbs: 18, fat: 4, category: 'carbs' },
     { id: 'c27', name: 'Cornstarch', unit: 'tbsp', calories: 30, protein: 0, carbs: 7, fat: 0, category: 'carbs' },
+    // NEW carbs
+    { id: 'c28', name: 'Cream of Rice (cooked)', unit: 'cup', calories: 127, protein: 2, carbs: 28, fat: 0.2, category: 'carbs' },
+    { id: 'c29', name: 'Cream of Wheat (cooked)', unit: 'cup', calories: 133, protein: 4, carbs: 28, fat: 0.5, category: 'carbs' },
+    { id: 'c30', name: 'Waffles (frozen)', unit: 'each', calories: 95, protein: 2, carbs: 15, fat: 3, category: 'carbs' },
+    { id: 'c31', name: 'Garlic Bread', unit: 'slice', calories: 150, protein: 3, carbs: 16, fat: 8, category: 'carbs' },
+    { id: 'c32', name: 'Cornbread', unit: 'piece', calories: 173, protein: 4, carbs: 28, fat: 5, category: 'carbs' },
   ],
   fruits: [
     { id: 'f1', name: 'Banana (medium)', unit: 'each', calories: 105, protein: 1.3, carbs: 27, fat: 0.4, category: 'fruits' },
@@ -69,6 +82,11 @@ export const FOOD_DATABASE = {
     { id: 'f11', name: 'Pineapple (chunks)', unit: 'cup', calories: 82, protein: 0.9, carbs: 22, fat: 0.2, category: 'fruits' },
     { id: 'f12', name: 'Watermelon (cubed)', unit: 'cup', calories: 46, protein: 0.9, carbs: 12, fat: 0.2, category: 'fruits' },
     { id: 'f13', name: 'Apple (diced)', unit: 'cup', calories: 65, protein: 0.3, carbs: 17, fat: 0.2, category: 'fruits' },
+    // NEW fruits
+    { id: 'f14', name: 'Cuties/Mandarins', unit: 'each', calories: 40, protein: 0.6, carbs: 10, fat: 0.2, category: 'fruits' },
+    { id: 'f15', name: 'Raspberries', unit: 'cup', calories: 64, protein: 1.5, carbs: 15, fat: 0.8, category: 'fruits' },
+    { id: 'f16', name: 'Blackberries', unit: 'cup', calories: 62, protein: 2, carbs: 14, fat: 0.7, category: 'fruits' },
+    { id: 'f17', name: 'Pear (medium)', unit: 'each', calories: 101, protein: 0.6, carbs: 27, fat: 0.2, category: 'fruits' },
   ],
   dairy: [
     { id: 'd1', name: 'Whole Milk', unit: 'oz', calories: 18, protein: 1, carbs: 1.5, fat: 1, category: 'dairy' },
@@ -105,6 +123,9 @@ export const FOOD_DATABASE = {
     { id: 'fa9', name: 'Candied Pecans (Buc-ees Style)', unit: '1/4 cup', calories: 210, protein: 2.5, carbs: 16, fat: 17, category: 'fats' },
     { id: 'fa10', name: 'Chia Seeds', unit: 'tbsp', calories: 58, protein: 2, carbs: 5, fat: 3.7, category: 'fats' },
     { id: 'fa11', name: 'Vegetable Oil', unit: 'tbsp', calories: 120, protein: 0, carbs: 0, fat: 14, category: 'fats' },
+    // NEW fats
+    { id: 'fa12', name: 'Avocado Oil', unit: 'tbsp', calories: 124, protein: 0, carbs: 0, fat: 14, category: 'fats' },
+    { id: 'fa13', name: 'Pecans', unit: 'oz', calories: 196, protein: 2.6, carbs: 4, fat: 20, category: 'fats' },
   ],
   vegetables: [
     { id: 'v1', name: 'Bell Pepper (whole)', unit: 'each', calories: 30, protein: 1, carbs: 6, fat: 0.3, category: 'vegetables' },
@@ -123,6 +144,21 @@ export const FOOD_DATABASE = {
     { id: 'v14', name: 'Ginger (minced)', unit: 'tbsp', calories: 5, protein: 0.1, carbs: 1, fat: 0, category: 'vegetables' },
     { id: 'v15', name: 'Diced Tomatoes (canned)', unit: 'cup', calories: 32, protein: 1.6, carbs: 7, fat: 0.2, category: 'vegetables' },
     { id: 'v16', name: 'Bell Pepper (sliced)', unit: 'cup', calories: 30, protein: 1, carbs: 6, fat: 0.3, category: 'vegetables' },
+    // NEW vegetables
+    { id: 'v17', name: 'Carrots (cooked)', unit: 'cup', calories: 54, protein: 1.2, carbs: 13, fat: 0.3, category: 'vegetables' },
+    { id: 'v18', name: 'Brussels Sprouts (cooked)', unit: 'cup', calories: 56, protein: 4, carbs: 11, fat: 0.8, category: 'vegetables' },
+    { id: 'v19', name: 'Squash (cooked)', unit: 'cup', calories: 36, protein: 1.6, carbs: 8, fat: 0.6, category: 'vegetables' },
+    { id: 'v20', name: 'Spinach (cooked)', unit: 'cup', calories: 41, protein: 5, carbs: 7, fat: 0.5, category: 'vegetables' },
+    { id: 'v21', name: 'Romaine Lettuce', unit: 'cup', calories: 8, protein: 0.6, carbs: 1.5, fat: 0.1, category: 'vegetables' },
+    { id: 'v22', name: 'Butter Leaf Lettuce', unit: 'cup', calories: 7, protein: 0.7, carbs: 1.2, fat: 0.1, category: 'vegetables' },
+    { id: 'v23', name: 'Black Eyed Peas (cooked)', unit: 'cup', calories: 198, protein: 13, carbs: 35, fat: 0.9, category: 'vegetables' },
+    { id: 'v24', name: 'Pinto Beans (cooked)', unit: 'cup', calories: 245, protein: 15, carbs: 45, fat: 1, category: 'vegetables' },
+    { id: 'v25', name: 'Black Beans (cooked)', unit: 'cup', calories: 227, protein: 15, carbs: 41, fat: 0.9, category: 'vegetables' },
+    { id: 'v26', name: 'Refried Beans', unit: 'cup', calories: 237, protein: 14, carbs: 39, fat: 3, category: 'vegetables' },
+    { id: 'v27', name: 'Roma Tomato', unit: 'each', calories: 11, protein: 0.5, carbs: 2.4, fat: 0.1, category: 'vegetables' },
+    { id: 'v28', name: 'Beefsteak Tomato', unit: 'each', calories: 33, protein: 1.6, carbs: 7, fat: 0.4, category: 'vegetables' },
+    { id: 'v29', name: 'Grape/Cherry Tomatoes', unit: 'cup', calories: 27, protein: 1.3, carbs: 6, fat: 0.3, category: 'vegetables' },
+    { id: 'v30', name: 'Cucumber (sliced)', unit: 'cup', calories: 16, protein: 0.7, carbs: 4, fat: 0.1, category: 'vegetables' },
   ],
   extras: [
     { id: 'e1', name: 'Maple Syrup', unit: 'tbsp', calories: 52, protein: 0, carbs: 13, fat: 0, category: 'extras' },
@@ -145,6 +181,10 @@ export const FOOD_DATABASE = {
     { id: 'e18', name: 'Powdered Sugar', unit: 'tbsp', calories: 30, protein: 0, carbs: 8, fat: 0, category: 'extras' },
     { id: 'e19', name: 'Brown Sugar', unit: 'tbsp', calories: 52, protein: 0, carbs: 13, fat: 0, category: 'extras' },
     { id: 'e20', name: 'Cajun Seasoning', unit: 'tbsp', calories: 8, protein: 0.4, carbs: 1.7, fat: 0.3, category: 'extras' },
+    // NEW extras
+    { id: 'e21', name: 'Balsamic Vinegar', unit: 'tbsp', calories: 14, protein: 0.1, carbs: 2.7, fat: 0, category: 'extras' },
+    { id: 'e22', name: 'Red Wine Vinegar', unit: 'tbsp', calories: 3, protein: 0, carbs: 0, fat: 0, category: 'extras' },
+    { id: 'e23', name: 'Sugar (granulated)', unit: 'tbsp', calories: 49, protein: 0, carbs: 13, fat: 0, category: 'extras' },
   ],
   snacks: [
     { id: 's1', name: 'Granola', unit: '1/4 cup', calories: 120, protein: 3, carbs: 20, fat: 4, category: 'snacks' },
