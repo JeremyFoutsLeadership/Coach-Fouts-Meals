@@ -1,6 +1,6 @@
 import React, { useState, useEffect, createContext, useContext } from 'react';
 import { BrowserRouter, Routes, Route, NavLink, useNavigate, useParams } from 'react-router-dom';
-import { localDB, isSupabaseConfigured } from './lib/database';
+import { localDB } from './lib/database';
 import { FOOD_DATABASE, ALL_FOODS, getFoodById, searchFoods, FOOD_CATEGORIES } from './data/foods';
 import { DEFAULT_MEAL_TEMPLATES, getAllMealTemplates } from './data/mealTemplates';
 import { 
@@ -8,7 +8,6 @@ import {
   calculateItemMacros, 
   calculateMealMacros, 
   calculateDayMacros,
-  calculateWeeklyAverage,
   calculateTargetPercentage,
   getMacroStatus,
   formatHeight,
@@ -16,9 +15,9 @@ import {
   ACTIVITY_MULTIPLIERS,
   GOAL_ADJUSTMENTS 
 } from './lib/calculations';
-import { downloadMealPlanPDF, generateMealPlanText } from './lib/pdfGenerator';
+import { downloadMealPlanPDF } from './lib/pdfGenerator';
+import { getIntakeForms, getIntakeFormsCounts, updateIntakeFormStatus, deleteIntakeForm } from './lib/supabase';
 import IntakeForm from './pages/IntakeForm';
-import IntakeAdmin from './pages/IntakeAdmin';
 import './App.css';
 
 // Create context for global state
@@ -29,7 +28,7 @@ const useApp = () => useContext(AppContext);
 // ============================================
 // HEADER COMPONENT
 // ============================================
-const Header = () => {
+const Header = ({ intakeCount }) => {
   return (
     <header className="header">
       <div className="header-content">
@@ -46,6 +45,22 @@ const Header = () => {
           </NavLink>
           <NavLink to="/athletes" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
             Athletes
+          </NavLink>
+          <NavLink to="/intakes" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+            Intakes
+            {intakeCount > 0 && (
+              <span style={{
+                marginLeft: '6px',
+                background: '#22c55e',
+                color: 'white',
+                borderRadius: '10px',
+                padding: '2px 8px',
+                fontSize: '12px',
+                fontWeight: 'bold'
+              }}>
+                {intakeCount}
+              </span>
+            )}
           </NavLink>
           <NavLink to="/builder" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
             Plan Builder
@@ -65,8 +80,9 @@ const Header = () => {
 // ============================================
 // DASHBOARD PAGE
 // ============================================
-const Dashboard = () => {
+const Dashboard = ({ intakeCounts }) => {
   const { athletes, mealPlans } = useApp();
+  const navigate = useNavigate();
   
   const recentAthletes = athletes.slice(0, 5);
   const athletesNeedingPlans = athletes.filter(a => {
@@ -87,9 +103,22 @@ const Dashboard = () => {
           <div className="stat-number">{mealPlans.length}</div>
           <div className="stat-label">Meal Plans</div>
         </div>
-        <div className="stat-card">
-          <div className="stat-number">{athletesNeedingPlans.length}</div>
+        <div 
+          className="stat-card" 
+          onClick={() => navigate('/intakes')}
+          style={{ cursor: 'pointer', transition: 'transform 0.2s' }}
+          onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
+          onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+        >
+          <div className="stat-number" style={{ color: intakeCounts.new > 0 ? '#22c55e' : undefined }}>
+            {intakeCounts.new}
+          </div>
           <div className="stat-label">Need Plans</div>
+          {intakeCounts.new > 0 && (
+            <div style={{ fontSize: '11px', color: '#22c55e', marginTop: '4px' }}>
+              Click to view →
+            </div>
+          )}
         </div>
         <div className="stat-card">
           <div className="stat-number">{ALL_FOODS.length}</div>
@@ -127,9 +156,9 @@ const Dashboard = () => {
               <span className="quick-action-icon">+</span>
               <span>New Athlete</span>
             </NavLink>
-            <NavLink to="/builder" className="quick-action-btn">
+            <NavLink to="/intakes" className="quick-action-btn">
               <span className="quick-action-icon">📋</span>
-              <span>Build Plan</span>
+              <span>View Intakes</span>
             </NavLink>
             <NavLink to="/foods" className="quick-action-btn">
               <span className="quick-action-icon">🔍</span>
@@ -138,6 +167,507 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
+    </div>
+  );
+};
+
+// ============================================
+// INTAKES PAGE - Integrated Intake Management
+// ============================================
+const IntakesPage = ({ onRefreshCounts }) => {
+  const [submissions, setSubmissions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState('all');
+  const [selectedSubmission, setSelectedSubmission] = useState(null);
+  const [copySuccess, setCopySuccess] = useState(false);
+
+  useEffect(() => {
+    loadSubmissions();
+  }, []);
+
+  const loadSubmissions = async () => {
+    try {
+      setLoading(true);
+      const data = await getIntakeForms();
+      setSubmissions(data || []);
+      if (onRefreshCounts) onRefreshCounts();
+    } catch (err) {
+      console.error('Error loading submissions:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const markAsContacted = async (id) => {
+    try {
+      await updateIntakeFormStatus(id, 'contacted');
+      await loadSubmissions();
+      if (selectedSubmission?.id === id) {
+        setSelectedSubmission(prev => ({ ...prev, status: 'contacted' }));
+      }
+    } catch (err) {
+      console.error('Error updating status:', err);
+      alert('Error updating status');
+    }
+  };
+
+  const markAsConverted = async (id) => {
+    try {
+      await updateIntakeFormStatus(id, 'converted');
+      await loadSubmissions();
+      if (selectedSubmission?.id === id) {
+        setSelectedSubmission(prev => ({ ...prev, status: 'converted' }));
+      }
+    } catch (err) {
+      console.error('Error updating status:', err);
+      alert('Error updating status');
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this submission?')) return;
+    try {
+      await deleteIntakeForm(id);
+      await loadSubmissions();
+      setSelectedSubmission(null);
+    } catch (err) {
+      console.error('Error deleting:', err);
+      alert('Error deleting submission');
+    }
+  };
+
+  // Generate "Copy for Claude" text
+  const generateClaudeText = (s) => {
+    const heightStr = s.height_feet && s.height_inches !== null 
+      ? `${s.height_feet}'${s.height_inches}"` 
+      : 'Not provided';
+    
+    return `ATHLETE INTAKE FORM - ${s.athlete_name}
+
+=== BASIC INFO ===
+Name: ${s.athlete_name}
+Parent/Guardian: ${s.parent_name || 'N/A'}
+Email: ${s.email}
+Phone: ${s.phone || 'N/A'}
+Age: ${s.age}
+Sport: ${s.sport}
+Position: ${s.position || 'N/A'}
+
+=== PHYSICAL STATS ===
+Current Weight: ${s.current_weight} lbs
+Goal Weight: ${s.goal_weight || 'Not specified'} lbs
+Height: ${heightStr}
+Primary Goal: ${s.primary_goal}
+Timeline: ${s.timeline || 'Not specified'}
+
+=== FOOD PREFERENCES ===
+Proteins Liked: ${s.proteins_liked?.join(', ') || 'None selected'}
+Carbs Liked: ${s.carbs_liked?.join(', ') || 'None selected'}
+Fruits Liked: ${s.fruits_liked?.join(', ') || 'None selected'}
+Vegetables Liked: ${s.vegetables_liked?.join(', ') || 'None selected'}
+Foods to AVOID: ${s.foods_to_avoid || 'None specified'}
+
+=== ALLERGIES & RESTRICTIONS ===
+Allergies: ${s.allergies?.join(', ') || 'None'}
+Dietary Restrictions: ${s.dietary_restrictions?.join(', ') || 'None'}
+
+=== MEAL LOGISTICS ===
+Meals Per Day: ${s.meals_per_day}
+Meal Prep Help: ${s.meal_prep_help}
+Microwave at School: ${s.has_microwave_at_school ? 'Yes' : 'No'}
+Cooks Own Meals: ${s.cooks_own_meals ? 'Yes' : 'No'}
+Grocery Budget: ${s.grocery_budget || 'Not specified'}
+
+=== SUPPLEMENTS ===
+Current Supplements: ${s.current_supplements || 'None'}
+
+=== ADDITIONAL NOTES ===
+${s.notes || 'None'}
+
+---
+Please create a personalized 7-day meal plan for this athlete with:
+- Welcome Letter
+- 7-Day Meal Plan with exact macros
+- Grocery List
+- CorVive supplement protocol (AM Hydrate + Creatine, Training Hydrate, Evening Protein+Collagen shake)`;
+  };
+
+  const copyForClaude = async (submission) => {
+    const text = generateClaudeText(submission);
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
+    } catch (err) {
+      // Fallback
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
+    }
+  };
+
+  const filteredSubmissions = submissions.filter(s => {
+    if (filter === 'all') return true;
+    if (filter === 'new') return s.status === 'new' || !s.status;
+    return s.status === filter;
+  });
+
+  const getStatusBadge = (status) => {
+    const styles = {
+      new: { background: '#dcfce7', color: '#166534' },
+      contacted: { background: '#fef3c7', color: '#92400e' },
+      converted: { background: '#dbeafe', color: '#1e40af' }
+    };
+    const displayStatus = status || 'new';
+    return (
+      <span style={{
+        padding: '4px 12px',
+        borderRadius: '12px',
+        fontSize: '12px',
+        fontWeight: '600',
+        textTransform: 'uppercase',
+        ...styles[displayStatus]
+      }}>
+        {displayStatus}
+      </span>
+    );
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit'
+    });
+  };
+
+  if (loading) {
+    return (
+      <div className="page">
+        <h1 className="page-title">Intake Submissions</h1>
+        <div style={{ textAlign: 'center', padding: '48px', color: '#94a3b8' }}>
+          Loading submissions...
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="page">
+      <div className="page-header">
+        <h1 className="page-title">Intake Submissions</h1>
+        <button className="btn btn-secondary" onClick={loadSubmissions}>
+          🔄 Refresh
+        </button>
+      </div>
+
+      {/* Stats Row */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '24px' }}>
+        {[
+          { label: 'Total', count: submissions.length, color: '#6366f1' },
+          { label: 'New', count: submissions.filter(s => s.status === 'new' || !s.status).length, color: '#22c55e' },
+          { label: 'Contacted', count: submissions.filter(s => s.status === 'contacted').length, color: '#f59e0b' },
+          { label: 'Converted', count: submissions.filter(s => s.status === 'converted').length, color: '#3b82f6' }
+        ].map(stat => (
+          <div key={stat.label} style={{ background: '#334155', borderRadius: '12px', padding: '20px', textAlign: 'center' }}>
+            <div style={{ fontSize: '32px', fontWeight: 'bold', color: stat.color }}>{stat.count}</div>
+            <div style={{ color: '#94a3b8', fontSize: '14px' }}>{stat.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Filter Tabs */}
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
+        {['all', 'new', 'contacted', 'converted'].map(status => (
+          <button
+            key={status}
+            onClick={() => setFilter(status)}
+            style={{
+              padding: '8px 16px',
+              borderRadius: '8px',
+              border: 'none',
+              cursor: 'pointer',
+              fontWeight: '500',
+              background: filter === status ? '#22c55e' : '#334155',
+              color: filter === status ? 'white' : '#94a3b8'
+            }}
+          >
+            {status.charAt(0).toUpperCase() + status.slice(1)}
+          </button>
+        ))}
+      </div>
+
+      {/* Submissions List */}
+      {filteredSubmissions.length === 0 ? (
+        <div style={{ background: '#334155', borderRadius: '12px', padding: '48px', textAlign: 'center' }}>
+          <div style={{ fontSize: '48px', marginBottom: '16px' }}>📭</div>
+          <div style={{ color: '#94a3b8', fontSize: '18px' }}>No submissions found</div>
+          <p style={{ color: '#64748b', marginTop: '8px' }}>
+            Share your intake form: <a href="/intake" style={{ color: '#22c55e' }}>coach-fouts-meals.vercel.app/intake</a>
+          </p>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {filteredSubmissions.map(submission => (
+            <div
+              key={submission.id}
+              onClick={() => setSelectedSubmission(submission)}
+              style={{
+                background: '#334155',
+                borderRadius: '12px',
+                padding: '20px',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                border: '2px solid transparent'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.borderColor = '#22c55e'}
+              onMouseLeave={(e) => e.currentTarget.style.borderColor = 'transparent'}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+                    <span style={{ fontSize: '18px', fontWeight: '600', color: 'white' }}>
+                      {submission.athlete_name}
+                    </span>
+                    {getStatusBadge(submission.status)}
+                  </div>
+                  <div style={{ display: 'flex', gap: '16px', color: '#94a3b8', fontSize: '14px', flexWrap: 'wrap' }}>
+                    <span>🏀 {submission.sport}</span>
+                    <span>📧 {submission.email}</span>
+                    <span>⚖️ {submission.current_weight} lbs → {submission.goal_weight || '?'} lbs</span>
+                    <span>🎯 {submission.primary_goal}</span>
+                  </div>
+                </div>
+                <div style={{ color: '#64748b', fontSize: '13px' }}>
+                  {formatDate(submission.created_at)}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Detail Modal */}
+      {selectedSubmission && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0,0,0,0.7)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px',
+            zIndex: 1000
+          }}
+          onClick={() => setSelectedSubmission(null)}
+        >
+          <div
+            style={{
+              background: '#1e293b',
+              borderRadius: '16px',
+              padding: '32px',
+              maxWidth: '800px',
+              width: '100%',
+              maxHeight: '90vh',
+              overflow: 'auto'
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
+              <div>
+                <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white', marginBottom: '4px' }}>
+                  {selectedSubmission.athlete_name}
+                </h2>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  {getStatusBadge(selectedSubmission.status)}
+                  <span style={{ color: '#64748b', fontSize: '13px' }}>
+                    Submitted {formatDate(selectedSubmission.created_at)}
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedSubmission(null)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#94a3b8',
+                  fontSize: '24px',
+                  cursor: 'pointer'
+                }}
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Copy for Claude Button - PROMINENT */}
+            <button
+              onClick={() => copyForClaude(selectedSubmission)}
+              style={{
+                width: '100%',
+                padding: '16px',
+                borderRadius: '12px',
+                border: 'none',
+                cursor: 'pointer',
+                fontWeight: 'bold',
+                fontSize: '16px',
+                background: copySuccess ? '#22c55e' : 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                color: 'white',
+                marginBottom: '24px',
+                transition: 'all 0.2s'
+              }}
+            >
+              {copySuccess ? '✓ Copied to Clipboard!' : '📋 Copy for Claude - Generate Meal Plan'}
+            </button>
+
+            {/* Contact Info */}
+            <div style={{ background: '#334155', borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
+              <h3 style={{ color: '#94a3b8', fontSize: '12px', textTransform: 'uppercase', marginBottom: '12px' }}>Contact Info</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', color: 'white' }}>
+                <div><strong>Email:</strong> {selectedSubmission.email}</div>
+                <div><strong>Phone:</strong> {selectedSubmission.phone || 'N/A'}</div>
+                <div><strong>Parent:</strong> {selectedSubmission.parent_name || 'N/A'}</div>
+              </div>
+            </div>
+
+            {/* Physical Stats */}
+            <div style={{ background: '#334155', borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
+              <h3 style={{ color: '#94a3b8', fontSize: '12px', textTransform: 'uppercase', marginBottom: '12px' }}>Physical Stats</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', color: 'white' }}>
+                <div><strong>Age:</strong> {selectedSubmission.age}</div>
+                <div><strong>Sport:</strong> {selectedSubmission.sport}</div>
+                <div><strong>Position:</strong> {selectedSubmission.position || 'N/A'}</div>
+                <div><strong>Current Weight:</strong> {selectedSubmission.current_weight} lbs</div>
+                <div><strong>Goal Weight:</strong> {selectedSubmission.goal_weight || 'N/A'} lbs</div>
+                <div><strong>Height:</strong> {selectedSubmission.height_feet}'{selectedSubmission.height_inches}"</div>
+                <div><strong>Primary Goal:</strong> {selectedSubmission.primary_goal}</div>
+                <div><strong>Timeline:</strong> {selectedSubmission.timeline || 'N/A'}</div>
+              </div>
+            </div>
+
+            {/* Food Preferences */}
+            <div style={{ background: '#334155', borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
+              <h3 style={{ color: '#94a3b8', fontSize: '12px', textTransform: 'uppercase', marginBottom: '12px' }}>Food Preferences</h3>
+              <div style={{ color: 'white', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div><strong>Proteins:</strong> {selectedSubmission.proteins_liked?.join(', ') || 'None selected'}</div>
+                <div><strong>Carbs:</strong> {selectedSubmission.carbs_liked?.join(', ') || 'None selected'}</div>
+                <div><strong>Fruits:</strong> {selectedSubmission.fruits_liked?.join(', ') || 'None selected'}</div>
+                <div><strong>Vegetables:</strong> {selectedSubmission.vegetables_liked?.join(', ') || 'None selected'}</div>
+                <div style={{ color: '#f87171' }}><strong>Won't Eat:</strong> {selectedSubmission.foods_to_avoid || 'None specified'}</div>
+              </div>
+            </div>
+
+            {/* Restrictions */}
+            <div style={{ background: '#334155', borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
+              <h3 style={{ color: '#94a3b8', fontSize: '12px', textTransform: 'uppercase', marginBottom: '12px' }}>Allergies & Restrictions</h3>
+              <div style={{ color: 'white', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div><strong>Allergies:</strong> {selectedSubmission.allergies?.join(', ') || 'None'}</div>
+                <div><strong>Dietary Restrictions:</strong> {selectedSubmission.dietary_restrictions?.join(', ') || 'None'}</div>
+              </div>
+            </div>
+
+            {/* Logistics */}
+            <div style={{ background: '#334155', borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
+              <h3 style={{ color: '#94a3b8', fontSize: '12px', textTransform: 'uppercase', marginBottom: '12px' }}>Meal Logistics</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', color: 'white' }}>
+                <div><strong>Meals/Day:</strong> {selectedSubmission.meals_per_day}</div>
+                <div><strong>Meal Prep Help:</strong> {selectedSubmission.meal_prep_help}</div>
+                <div><strong>Microwave at School:</strong> {selectedSubmission.has_microwave_at_school ? 'Yes' : 'No'}</div>
+                <div><strong>Cooks Own Meals:</strong> {selectedSubmission.cooks_own_meals ? 'Yes' : 'No'}</div>
+                <div><strong>Budget:</strong> {selectedSubmission.grocery_budget || 'N/A'}</div>
+                <div><strong>Supplements:</strong> {selectedSubmission.current_supplements || 'None'}</div>
+              </div>
+            </div>
+
+            {/* Notes */}
+            {selectedSubmission.notes && (
+              <div style={{ background: '#334155', borderRadius: '12px', padding: '16px', marginBottom: '24px' }}>
+                <h3 style={{ color: '#94a3b8', fontSize: '12px', textTransform: 'uppercase', marginBottom: '12px' }}>Additional Notes</h3>
+                <div style={{ color: 'white' }}>{selectedSubmission.notes}</div>
+              </div>
+            )}
+
+            {/* Actions */}
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+              {selectedSubmission.status !== 'contacted' && selectedSubmission.status !== 'converted' && (
+                <button
+                  onClick={() => markAsContacted(selectedSubmission.id)}
+                  style={{
+                    flex: 1,
+                    minWidth: '150px',
+                    padding: '12px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontWeight: '600',
+                    background: '#f59e0b',
+                    color: 'white'
+                  }}
+                >
+                  ✓ Mark as Contacted
+                </button>
+              )}
+              {selectedSubmission.status !== 'converted' && (
+                <button
+                  onClick={() => markAsConverted(selectedSubmission.id)}
+                  style={{
+                    flex: 1,
+                    minWidth: '150px',
+                    padding: '12px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontWeight: '600',
+                    background: '#22c55e',
+                    color: 'white'
+                  }}
+                >
+                  🎉 Mark as Converted
+                </button>
+              )}
+              <button
+                onClick={() => handleDelete(selectedSubmission.id)}
+                style={{
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  background: '#dc2626',
+                  color: 'white'
+                }}
+              >
+                🗑️ Delete
+              </button>
+              <button
+                onClick={() => setSelectedSubmission(null)}
+                style={{
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  background: '#475569',
+                  color: 'white'
+                }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -583,7 +1113,6 @@ const PlanBuilder = () => {
   const { athletes, mealPlans, addMealPlan, updateMealPlan } = useApp();
   const navigate = useNavigate();
   
-  // Get query params
   const params = new URLSearchParams(window.location.search);
   const athleteIdParam = params.get('athlete');
   const planIdParam = params.get('plan');
@@ -598,7 +1127,6 @@ const PlanBuilder = () => {
   
   const selectedAthlete = athletes.find(a => a.id === selectedAthleteId);
   
-  // Initialize plan
   const emptyDay = {
     breakfast: [],
     snack1: [],
@@ -614,7 +1142,6 @@ const PlanBuilder = () => {
     days: Array(7).fill(null).map(() => JSON.parse(JSON.stringify(emptyDay))),
   });
   
-  // Load existing plan if editing
   useEffect(() => {
     if (planIdParam) {
       const existingPlan = mealPlans.find(p => p.id === planIdParam);
@@ -625,7 +1152,6 @@ const PlanBuilder = () => {
     }
   }, [planIdParam, mealPlans]);
   
-  // Update targets when athlete changes
   useEffect(() => {
     if (selectedAthlete) {
       setPlan(prev => ({
@@ -750,7 +1276,6 @@ const PlanBuilder = () => {
         </div>
       ) : (
         <>
-          {/* Targets Display */}
           <div className="targets-bar">
             <div className="athlete-info">
               <strong>{selectedAthlete.name}</strong>
@@ -785,7 +1310,6 @@ const PlanBuilder = () => {
             </div>
           </div>
           
-          {/* Day Selector */}
           <div className="day-selector">
             {dayNames.map((day, idx) => {
               const dayMacros = calculateDayMacros(plan.days[idx]);
@@ -806,7 +1330,6 @@ const PlanBuilder = () => {
             </button>
           </div>
           
-          {/* Meal Slots */}
           <div className="meal-slots">
             {mealSlots.map(slot => {
               const items = plan.days[selectedDay][slot.key];
@@ -863,7 +1386,6 @@ const PlanBuilder = () => {
         </>
       )}
       
-      {/* Food Picker Modal */}
       {showFoodPicker && (
         <div className="modal-overlay" onClick={() => setShowFoodPicker(false)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
@@ -906,7 +1428,6 @@ const PlanBuilder = () => {
         </div>
       )}
       
-      {/* Saved Meal Picker Modal */}
       {showMealPicker && (
         <div className="modal-overlay" onClick={() => setShowMealPicker(false)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
@@ -1045,11 +1566,22 @@ const FoodDatabase = () => {
 const AdminApp = () => {
   const [athletes, setAthletes] = useState([]);
   const [mealPlans, setMealPlans] = useState([]);
+  const [intakeCounts, setIntakeCounts] = useState({ total: 0, new: 0, contacted: 0, converted: 0 });
   
   useEffect(() => {
     setAthletes(localDB.getAthletes());
     setMealPlans(localDB.getMealPlans());
+    loadIntakeCounts();
   }, []);
+
+  const loadIntakeCounts = async () => {
+    try {
+      const counts = await getIntakeFormsCounts();
+      setIntakeCounts(counts);
+    } catch (err) {
+      console.error('Error loading intake counts:', err);
+    }
+  };
   
   const addAthlete = (athleteData) => {
     const newAthlete = localDB.addAthlete(athleteData);
@@ -1097,14 +1629,15 @@ const AdminApp = () => {
   return (
     <AppContext.Provider value={contextValue}>
       <div className="app">
-        <Header />
+        <Header intakeCount={intakeCounts.new} />
         <main className="main">
           <Routes>
-            <Route path="/" element={<Dashboard />} />
+            <Route path="/" element={<Dashboard intakeCounts={intakeCounts} />} />
             <Route path="/athletes" element={<AthletesList />} />
             <Route path="/athletes/new" element={<AthleteForm />} />
             <Route path="/athletes/:id" element={<AthleteDetail />} />
             <Route path="/athletes/:id/edit" element={<AthleteForm />} />
+            <Route path="/intakes" element={<IntakesPage onRefreshCounts={loadIntakeCounts} />} />
             <Route path="/builder" element={<PlanBuilder />} />
             <Route path="/meals" element={<SavedMeals />} />
             <Route path="/foods" element={<FoodDatabase />} />
@@ -1119,16 +1652,9 @@ const AdminApp = () => {
 // MAIN APP - Routes to either Intake or Admin
 // ============================================
 function App() {
-  const path = window.location.pathname;
-  
-  // If on intake page, render just the form (no header/nav)
-  if (path === '/intake' || path === '/intake/') {
+  // If on public intake page, render just the form (no header/nav)
+  if (window.location.pathname === '/intake') {
     return <IntakeForm />;
-  }
-  
-  // If on admin intake page, render the admin dashboard
-  if (path.startsWith('/admin/intake')) {
-    return <IntakeAdmin />;
   }
   
   // Otherwise render the full admin app
