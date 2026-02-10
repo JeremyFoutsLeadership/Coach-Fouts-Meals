@@ -16,8 +16,18 @@ import {
   GOAL_ADJUSTMENTS 
 } from './lib/calculations';
 import { downloadMealPlanPDF } from './lib/pdfGenerator';
-import { getIntakeForms, getIntakeFormsCounts, updateIntakeFormStatus, deleteIntakeForm } from './lib/supabase';
+import { 
+  getIntakeForms, 
+  getIntakeFormsCounts, 
+  updateIntakeFormStatus, 
+  deleteIntakeForm,
+  getSwapRequests,
+  getSwapRequestsCounts,
+  updateSwapRequestStatus,
+  deleteSwapRequest
+} from './lib/supabase';
 import IntakeForm from './pages/IntakeForm';
+import SwapForm from './pages/SwapForm';
 import './App.css';
 
 // Create context for global state
@@ -28,7 +38,7 @@ const useApp = () => useContext(AppContext);
 // ============================================
 // HEADER COMPONENT
 // ============================================
-const Header = ({ intakeCount }) => {
+const Header = ({ intakeCount, swapCount }) => {
   return (
     <header className="header">
       <div className="header-content">
@@ -62,6 +72,22 @@ const Header = ({ intakeCount }) => {
               </span>
             )}
           </NavLink>
+          <NavLink to="/swaps-admin" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+            Swaps
+            {swapCount > 0 && (
+              <span style={{
+                marginLeft: '6px',
+                background: '#f59e0b',
+                color: 'white',
+                borderRadius: '10px',
+                padding: '2px 8px',
+                fontSize: '12px',
+                fontWeight: 'bold'
+              }}>
+                {swapCount}
+              </span>
+            )}
+          </NavLink>
           <NavLink to="/builder" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
             Plan Builder
           </NavLink>
@@ -80,15 +106,11 @@ const Header = ({ intakeCount }) => {
 // ============================================
 // DASHBOARD PAGE
 // ============================================
-const Dashboard = ({ intakeCounts }) => {
+const Dashboard = ({ intakeCounts, swapCounts }) => {
   const { athletes, mealPlans } = useApp();
   const navigate = useNavigate();
   
   const recentAthletes = athletes.slice(0, 5);
-  const athletesNeedingPlans = athletes.filter(a => {
-    const plans = mealPlans.filter(p => p.athlete_id === a.id);
-    return plans.length === 0;
-  });
   
   return (
     <div className="page">
@@ -113,16 +135,29 @@ const Dashboard = ({ intakeCounts }) => {
           <div className="stat-number" style={{ color: intakeCounts.new > 0 ? '#22c55e' : undefined }}>
             {intakeCounts.new}
           </div>
-          <div className="stat-label">Need Plans</div>
+          <div className="stat-label">New Intakes</div>
           {intakeCounts.new > 0 && (
             <div style={{ fontSize: '11px', color: '#22c55e', marginTop: '4px' }}>
               Click to view →
             </div>
           )}
         </div>
-        <div className="stat-card">
-          <div className="stat-number">{ALL_FOODS.length}</div>
-          <div className="stat-label">Foods in Database</div>
+        <div 
+          className="stat-card" 
+          onClick={() => navigate('/swaps-admin')}
+          style={{ cursor: 'pointer', transition: 'transform 0.2s' }}
+          onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
+          onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+        >
+          <div className="stat-number" style={{ color: swapCounts.new > 0 ? '#f59e0b' : undefined }}>
+            {swapCounts.new}
+          </div>
+          <div className="stat-label">Swap Requests</div>
+          {swapCounts.new > 0 && (
+            <div style={{ fontSize: '11px', color: '#f59e0b', marginTop: '4px' }}>
+              Click to view →
+            </div>
+          )}
         </div>
       </div>
       
@@ -160,9 +195,9 @@ const Dashboard = ({ intakeCounts }) => {
               <span className="quick-action-icon">📋</span>
               <span>View Intakes</span>
             </NavLink>
-            <NavLink to="/foods" className="quick-action-btn">
-              <span className="quick-action-icon">🔍</span>
-              <span>Search Foods</span>
+            <NavLink to="/swaps-admin" className="quick-action-btn">
+              <span className="quick-action-icon">🔄</span>
+              <span>View Swaps</span>
             </NavLink>
           </div>
         </div>
@@ -172,7 +207,7 @@ const Dashboard = ({ intakeCounts }) => {
 };
 
 // ============================================
-// INTAKES PAGE - Integrated Intake Management
+// INTAKES PAGE
 // ============================================
 const IntakesPage = ({ onRefreshCounts }) => {
   const [submissions, setSubmissions] = useState([]);
@@ -236,7 +271,6 @@ const IntakesPage = ({ onRefreshCounts }) => {
     }
   };
 
-  // Generate "Copy for Claude" text
   const generateClaudeText = (s) => {
     const heightStr = s.height_feet && s.height_inches !== null 
       ? `${s.height_feet}'${s.height_inches}"` 
@@ -299,7 +333,6 @@ Please create a personalized 7-day meal plan for this athlete with:
       setCopySuccess(true);
       setTimeout(() => setCopySuccess(false), 2000);
     } catch (err) {
-      // Fallback
       const textarea = document.createElement('textarea');
       textarea.value = text;
       document.body.appendChild(textarea);
@@ -368,7 +401,6 @@ Please create a personalized 7-day meal plan for this athlete with:
         </button>
       </div>
 
-      {/* Stats Row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '24px' }}>
         {[
           { label: 'Total', count: submissions.length, color: '#6366f1' },
@@ -383,7 +415,6 @@ Please create a personalized 7-day meal plan for this athlete with:
         ))}
       </div>
 
-      {/* Filter Tabs */}
       <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
         {['all', 'new', 'contacted', 'converted'].map(status => (
           <button
@@ -404,7 +435,6 @@ Please create a personalized 7-day meal plan for this athlete with:
         ))}
       </div>
 
-      {/* Submissions List */}
       {filteredSubmissions.length === 0 ? (
         <div style={{ background: '#334155', borderRadius: '12px', padding: '48px', textAlign: 'center' }}>
           <div style={{ fontSize: '48px', marginBottom: '16px' }}>📭</div>
@@ -454,7 +484,6 @@ Please create a personalized 7-day meal plan for this athlete with:
         </div>
       )}
 
-      {/* Detail Modal */}
       {selectedSubmission && (
         <div
           style={{
@@ -484,7 +513,6 @@ Please create a personalized 7-day meal plan for this athlete with:
             }}
             onClick={e => e.stopPropagation()}
           >
-            {/* Modal Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
               <div>
                 <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white', marginBottom: '4px' }}>
@@ -499,19 +527,12 @@ Please create a personalized 7-day meal plan for this athlete with:
               </div>
               <button
                 onClick={() => setSelectedSubmission(null)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: '#94a3b8',
-                  fontSize: '24px',
-                  cursor: 'pointer'
-                }}
+                style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '24px', cursor: 'pointer' }}
               >
                 ×
               </button>
             </div>
 
-            {/* Copy for Claude Button - PROMINENT */}
             <button
               onClick={() => copyForClaude(selectedSubmission)}
               style={{
@@ -531,7 +552,6 @@ Please create a personalized 7-day meal plan for this athlete with:
               {copySuccess ? '✓ Copied to Clipboard!' : '📋 Copy for Claude - Generate Meal Plan'}
             </button>
 
-            {/* Contact Info */}
             <div style={{ background: '#334155', borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
               <h3 style={{ color: '#94a3b8', fontSize: '12px', textTransform: 'uppercase', marginBottom: '12px' }}>Contact Info</h3>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', color: 'white' }}>
@@ -541,7 +561,6 @@ Please create a personalized 7-day meal plan for this athlete with:
               </div>
             </div>
 
-            {/* Physical Stats */}
             <div style={{ background: '#334155', borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
               <h3 style={{ color: '#94a3b8', fontSize: '12px', textTransform: 'uppercase', marginBottom: '12px' }}>Physical Stats</h3>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', color: 'white' }}>
@@ -556,7 +575,6 @@ Please create a personalized 7-day meal plan for this athlete with:
               </div>
             </div>
 
-            {/* Food Preferences */}
             <div style={{ background: '#334155', borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
               <h3 style={{ color: '#94a3b8', fontSize: '12px', textTransform: 'uppercase', marginBottom: '12px' }}>Food Preferences</h3>
               <div style={{ color: 'white', display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -568,7 +586,6 @@ Please create a personalized 7-day meal plan for this athlete with:
               </div>
             </div>
 
-            {/* Restrictions */}
             <div style={{ background: '#334155', borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
               <h3 style={{ color: '#94a3b8', fontSize: '12px', textTransform: 'uppercase', marginBottom: '12px' }}>Allergies & Restrictions</h3>
               <div style={{ color: 'white', display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -577,7 +594,6 @@ Please create a personalized 7-day meal plan for this athlete with:
               </div>
             </div>
 
-            {/* Logistics */}
             <div style={{ background: '#334155', borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
               <h3 style={{ color: '#94a3b8', fontSize: '12px', textTransform: 'uppercase', marginBottom: '12px' }}>Meal Logistics</h3>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', color: 'white' }}>
@@ -590,7 +606,6 @@ Please create a personalized 7-day meal plan for this athlete with:
               </div>
             </div>
 
-            {/* Notes */}
             {selectedSubmission.notes && (
               <div style={{ background: '#334155', borderRadius: '12px', padding: '16px', marginBottom: '24px' }}>
                 <h3 style={{ color: '#94a3b8', fontSize: '12px', textTransform: 'uppercase', marginBottom: '12px' }}>Additional Notes</h3>
@@ -598,22 +613,11 @@ Please create a personalized 7-day meal plan for this athlete with:
               </div>
             )}
 
-            {/* Actions */}
             <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
               {selectedSubmission.status !== 'contacted' && selectedSubmission.status !== 'converted' && (
                 <button
                   onClick={() => markAsContacted(selectedSubmission.id)}
-                  style={{
-                    flex: 1,
-                    minWidth: '150px',
-                    padding: '12px',
-                    borderRadius: '8px',
-                    border: 'none',
-                    cursor: 'pointer',
-                    fontWeight: '600',
-                    background: '#f59e0b',
-                    color: 'white'
-                  }}
+                  style={{ flex: 1, minWidth: '150px', padding: '12px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: '600', background: '#f59e0b', color: 'white' }}
                 >
                   ✓ Mark as Contacted
                 </button>
@@ -621,46 +625,339 @@ Please create a personalized 7-day meal plan for this athlete with:
               {selectedSubmission.status !== 'converted' && (
                 <button
                   onClick={() => markAsConverted(selectedSubmission.id)}
-                  style={{
-                    flex: 1,
-                    minWidth: '150px',
-                    padding: '12px',
-                    borderRadius: '8px',
-                    border: 'none',
-                    cursor: 'pointer',
-                    fontWeight: '600',
-                    background: '#22c55e',
-                    color: 'white'
-                  }}
+                  style={{ flex: 1, minWidth: '150px', padding: '12px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: '600', background: '#22c55e', color: 'white' }}
                 >
                   🎉 Mark as Converted
                 </button>
               )}
               <button
                 onClick={() => handleDelete(selectedSubmission.id)}
-                style={{
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  cursor: 'pointer',
-                  fontWeight: '600',
-                  background: '#dc2626',
-                  color: 'white'
-                }}
+                style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: '600', background: '#dc2626', color: 'white' }}
               >
                 🗑️ Delete
               </button>
               <button
                 onClick={() => setSelectedSubmission(null)}
-                style={{
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  cursor: 'pointer',
-                  fontWeight: '600',
-                  background: '#475569',
-                  color: 'white'
-                }}
+                style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: '600', background: '#475569', color: 'white' }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ============================================
+// SWAPS PAGE
+// ============================================
+const SwapsPage = ({ onRefreshCounts }) => {
+  const [requests, setRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState('all');
+  const [selectedRequest, setSelectedRequest] = useState(null);
+
+  useEffect(() => {
+    loadRequests();
+  }, []);
+
+  const loadRequests = async () => {
+    try {
+      setLoading(true);
+      const data = await getSwapRequests();
+      setRequests(data || []);
+      if (onRefreshCounts) onRefreshCounts();
+    } catch (err) {
+      console.error('Error loading swap requests:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const markAsCompleted = async (id) => {
+    try {
+      await updateSwapRequestStatus(id, 'completed');
+      await loadRequests();
+      if (selectedRequest?.id === id) {
+        setSelectedRequest(prev => ({ ...prev, status: 'completed' }));
+      }
+    } catch (err) {
+      console.error('Error updating status:', err);
+      alert('Error updating status');
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this swap request?')) return;
+    try {
+      await deleteSwapRequest(id);
+      await loadRequests();
+      setSelectedRequest(null);
+    } catch (err) {
+      console.error('Error deleting:', err);
+      alert('Error deleting request');
+    }
+  };
+
+  const filteredRequests = requests.filter(r => {
+    if (filter === 'all') return true;
+    if (filter === 'new') return r.status === 'new' || !r.status;
+    return r.status === filter;
+  });
+
+  const getStatusBadge = (status) => {
+    const styles = {
+      new: { background: '#fef3c7', color: '#92400e' },
+      completed: { background: '#dcfce7', color: '#166534' }
+    };
+    const displayStatus = status || 'new';
+    return (
+      <span style={{
+        padding: '4px 12px',
+        borderRadius: '12px',
+        fontSize: '12px',
+        fontWeight: '600',
+        textTransform: 'uppercase',
+        ...styles[displayStatus]
+      }}>
+        {displayStatus}
+      </span>
+    );
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit'
+    });
+  };
+
+  const MEAL_SLOTS = [
+    { key: 'preworkout', label: 'Pre-Workout Breakfast' },
+    { key: 'breakfast', label: 'Breakfast' },
+    { key: 'am_snack', label: 'AM Snack' },
+    { key: 'lunch', label: 'Lunch' },
+    { key: 'pm_snack', label: 'PM Snack' },
+    { key: 'dinner', label: 'Dinner' },
+    { key: 'evening', label: 'Evening Shake' },
+  ];
+
+  const countSwaps = (request) => {
+    return MEAL_SLOTS.filter(slot => 
+      request[`${slot.key}_swap_out`] || request[`${slot.key}_replace_with`]
+    ).length;
+  };
+
+  if (loading) {
+    return (
+      <div className="page">
+        <h1 className="page-title">Swap Requests</h1>
+        <div style={{ textAlign: 'center', padding: '48px', color: '#94a3b8' }}>
+          Loading swap requests...
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="page">
+      <div className="page-header">
+        <h1 className="page-title">Swap Requests</h1>
+        <button className="btn btn-secondary" onClick={loadRequests}>
+          🔄 Refresh
+        </button>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '24px' }}>
+        {[
+          { label: 'Total', count: requests.length, color: '#6366f1' },
+          { label: 'New', count: requests.filter(r => r.status === 'new' || !r.status).length, color: '#f59e0b' },
+          { label: 'Completed', count: requests.filter(r => r.status === 'completed').length, color: '#22c55e' }
+        ].map(stat => (
+          <div key={stat.label} style={{ background: '#334155', borderRadius: '12px', padding: '20px', textAlign: 'center' }}>
+            <div style={{ fontSize: '32px', fontWeight: 'bold', color: stat.color }}>{stat.count}</div>
+            <div style={{ color: '#94a3b8', fontSize: '14px' }}>{stat.label}</div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
+        {['all', 'new', 'completed'].map(status => (
+          <button
+            key={status}
+            onClick={() => setFilter(status)}
+            style={{
+              padding: '8px 16px',
+              borderRadius: '8px',
+              border: 'none',
+              cursor: 'pointer',
+              fontWeight: '500',
+              background: filter === status ? '#f59e0b' : '#334155',
+              color: filter === status ? 'white' : '#94a3b8'
+            }}
+          >
+            {status.charAt(0).toUpperCase() + status.slice(1)}
+          </button>
+        ))}
+      </div>
+
+      {filteredRequests.length === 0 ? (
+        <div style={{ background: '#334155', borderRadius: '12px', padding: '48px', textAlign: 'center' }}>
+          <div style={{ fontSize: '48px', marginBottom: '16px' }}>🔄</div>
+          <div style={{ color: '#94a3b8', fontSize: '18px' }}>No swap requests found</div>
+          <p style={{ color: '#64748b', marginTop: '8px' }}>
+            Share the swap form: <a href="/swaps" style={{ color: '#f59e0b' }}>coach-fouts-meals.vercel.app/swaps</a>
+          </p>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {filteredRequests.map(request => (
+            <div
+              key={request.id}
+              onClick={() => setSelectedRequest(request)}
+              style={{
+                background: '#334155',
+                borderRadius: '12px',
+                padding: '20px',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                border: '2px solid transparent'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.borderColor = '#f59e0b'}
+              onMouseLeave={(e) => e.currentTarget.style.borderColor = 'transparent'}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+                    <span style={{ fontSize: '18px', fontWeight: '600', color: 'white' }}>
+                      {request.athlete_name}
+                    </span>
+                    {getStatusBadge(request.status)}
+                  </div>
+                  <div style={{ display: 'flex', gap: '16px', color: '#94a3b8', fontSize: '14px' }}>
+                    <span>📧 {request.athlete_email}</span>
+                    <span>🔄 {countSwaps(request)} swap(s) requested</span>
+                  </div>
+                </div>
+                <div style={{ color: '#64748b', fontSize: '13px' }}>
+                  {formatDate(request.created_at)}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {selectedRequest && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0,0,0,0.7)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px',
+            zIndex: 1000
+          }}
+          onClick={() => setSelectedRequest(null)}
+        >
+          <div
+            style={{
+              background: '#1e293b',
+              borderRadius: '16px',
+              padding: '32px',
+              maxWidth: '700px',
+              width: '100%',
+              maxHeight: '90vh',
+              overflow: 'auto'
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
+              <div>
+                <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white', marginBottom: '4px' }}>
+                  {selectedRequest.athlete_name}
+                </h2>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  {getStatusBadge(selectedRequest.status)}
+                  <span style={{ color: '#64748b', fontSize: '13px' }}>
+                    Submitted {formatDate(selectedRequest.created_at)}
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedRequest(null)}
+                style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '24px', cursor: 'pointer' }}
+              >
+                ×
+              </button>
+            </div>
+
+            <div style={{ background: '#334155', borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
+              <h3 style={{ color: '#94a3b8', fontSize: '12px', textTransform: 'uppercase', marginBottom: '12px' }}>Contact</h3>
+              <div style={{ color: 'white' }}>
+                <strong>Email:</strong> {selectedRequest.athlete_email}
+              </div>
+            </div>
+
+            <div style={{ background: '#334155', borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
+              <h3 style={{ color: '#94a3b8', fontSize: '12px', textTransform: 'uppercase', marginBottom: '16px' }}>Swap Requests</h3>
+              {MEAL_SLOTS.map(slot => {
+                const swapOut = selectedRequest[`${slot.key}_swap_out`];
+                const replaceWith = selectedRequest[`${slot.key}_replace_with`];
+                if (!swapOut && !replaceWith) return null;
+                return (
+                  <div key={slot.key} style={{ marginBottom: '16px', paddingBottom: '16px', borderBottom: '1px solid #475569' }}>
+                    <div style={{ color: '#f59e0b', fontWeight: '600', marginBottom: '8px' }}>{slot.label}</div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                      <div>
+                        <div style={{ color: '#ef4444', fontSize: '12px', marginBottom: '4px' }}>SWAP OUT:</div>
+                        <div style={{ color: 'white' }}>{swapOut || '—'}</div>
+                      </div>
+                      <div>
+                        <div style={{ color: '#22c55e', fontSize: '12px', marginBottom: '4px' }}>REPLACE WITH:</div>
+                        <div style={{ color: 'white' }}>{replaceWith || '—'}</div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {selectedRequest.notes && (
+              <div style={{ background: '#334155', borderRadius: '12px', padding: '16px', marginBottom: '24px' }}>
+                <h3 style={{ color: '#94a3b8', fontSize: '12px', textTransform: 'uppercase', marginBottom: '12px' }}>Notes</h3>
+                <div style={{ color: 'white' }}>{selectedRequest.notes}</div>
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: '12px' }}>
+              {(selectedRequest.status === 'new' || !selectedRequest.status) && (
+                <button
+                  onClick={() => markAsCompleted(selectedRequest.id)}
+                  style={{ flex: 1, padding: '12px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: '600', background: '#22c55e', color: 'white' }}
+                >
+                  ✓ Mark as Completed
+                </button>
+              )}
+              <button
+                onClick={() => handleDelete(selectedRequest.id)}
+                style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: '600', background: '#dc2626', color: 'white' }}
+              >
+                🗑️ Delete
+              </button>
+              <button
+                onClick={() => setSelectedRequest(null)}
+                style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: '600', background: '#475569', color: 'white' }}
               >
                 Close
               </button>
@@ -817,36 +1114,18 @@ const AthleteForm = () => {
         <div className="form-row">
           <div className="form-group">
             <label>Name *</label>
-            <input
-              type="text"
-              value={form.name}
-              onChange={e => setForm({ ...form, name: e.target.value })}
-              placeholder="Antonio D'Alessandro"
-              required
-            />
+            <input type="text" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required />
           </div>
           <div className="form-group">
             <label>Sport *</label>
-            <input
-              type="text"
-              value={form.sport}
-              onChange={e => setForm({ ...form, sport: e.target.value })}
-              placeholder="Football"
-              required
-            />
+            <input type="text" value={form.sport} onChange={e => setForm({ ...form, sport: e.target.value })} required />
           </div>
         </div>
         
         <div className="form-row">
           <div className="form-group">
             <label>Age *</label>
-            <input
-              type="number"
-              value={form.age}
-              onChange={e => setForm({ ...form, age: e.target.value })}
-              placeholder="16"
-              required
-            />
+            <input type="number" value={form.age} onChange={e => setForm({ ...form, age: e.target.value })} required />
           </div>
           <div className="form-group">
             <label>Gender</label>
@@ -857,13 +1136,7 @@ const AthleteForm = () => {
           </div>
           <div className="form-group">
             <label>Weight (lbs) *</label>
-            <input
-              type="number"
-              value={form.weight}
-              onChange={e => setForm({ ...form, weight: e.target.value })}
-              placeholder="183"
-              required
-            />
+            <input type="number" value={form.weight} onChange={e => setForm({ ...form, weight: e.target.value })} required />
           </div>
         </div>
         
@@ -871,20 +1144,9 @@ const AthleteForm = () => {
           <div className="form-group">
             <label>Height *</label>
             <div className="height-inputs">
-              <input
-                type="number"
-                value={form.heightFeet}
-                onChange={e => setForm({ ...form, heightFeet: e.target.value })}
-                placeholder="6"
-                required
-              />
+              <input type="number" value={form.heightFeet} onChange={e => setForm({ ...form, heightFeet: e.target.value })} required />
               <span>ft</span>
-              <input
-                type="number"
-                value={form.heightInches}
-                onChange={e => setForm({ ...form, heightInches: e.target.value })}
-                placeholder="1"
-              />
+              <input type="number" value={form.heightInches} onChange={e => setForm({ ...form, heightInches: e.target.value })} />
               <span>in</span>
             </div>
           </div>
@@ -908,20 +1170,12 @@ const AthleteForm = () => {
         
         <div className="form-group">
           <label>Food Preferences</label>
-          <textarea
-            value={form.preferences}
-            onChange={e => setForm({ ...form, preferences: e.target.value })}
-            placeholder="Loves: Steak, sushi, chicken, Chipotle, breakfast burritos..."
-          />
+          <textarea value={form.preferences} onChange={e => setForm({ ...form, preferences: e.target.value })} />
         </div>
         
         <div className="form-group">
           <label>Restrictions / Dislikes</label>
-          <textarea
-            value={form.restrictions}
-            onChange={e => setForm({ ...form, restrictions: e.target.value })}
-            placeholder="NO bacon, onions, waffles..."
-          />
+          <textarea value={form.restrictions} onChange={e => setForm({ ...form, restrictions: e.target.value })} />
         </div>
         
         {calculatedTargets && (
@@ -945,16 +1199,11 @@ const AthleteForm = () => {
                 <span className="target-label">Fat</span>
               </div>
             </div>
-            <div className="targets-detail">
-              <small>BMR: {calculatedTargets.bmr} | TDEE: {calculatedTargets.tdee}</small>
-            </div>
           </div>
         )}
         
         <div className="form-actions">
-          <button type="button" className="btn btn-secondary" onClick={() => navigate('/athletes')}>
-            Cancel
-          </button>
+          <button type="button" className="btn btn-secondary" onClick={() => navigate('/athletes')}>Cancel</button>
           <button type="submit" className="btn btn-primary" disabled={!calculatedTargets}>
             {existingAthlete ? 'Update Athlete' : 'Create Athlete'}
           </button>
@@ -980,16 +1229,14 @@ const AthleteDetail = () => {
       <div className="page">
         <div className="empty-state">
           <h3>Athlete not found</h3>
-          <button className="btn btn-primary" onClick={() => navigate('/athletes')}>
-            Back to Athletes
-          </button>
+          <button className="btn btn-primary" onClick={() => navigate('/athletes')}>Back to Athletes</button>
         </div>
       </div>
     );
   }
   
   const handleDelete = () => {
-    if (window.confirm(`Are you sure you want to delete ${athlete.name}?`)) {
+    if (window.confirm(`Delete ${athlete.name}?`)) {
       deleteAthlete(athlete.id);
       navigate('/athletes');
     }
@@ -1003,12 +1250,8 @@ const AthleteDetail = () => {
           <span className="sport-badge large">{athlete.sport}</span>
         </div>
         <div className="header-actions">
-          <button className="btn btn-secondary" onClick={() => navigate(`/athletes/${id}/edit`)}>
-            Edit
-          </button>
-          <button className="btn btn-primary" onClick={() => navigate(`/builder?athlete=${id}`)}>
-            Build Plan
-          </button>
+          <button className="btn btn-secondary" onClick={() => navigate(`/athletes/${id}/edit`)}>Edit</button>
+          <button className="btn btn-primary" onClick={() => navigate(`/builder?athlete=${id}`)}>Build Plan</button>
         </div>
       </div>
       
@@ -1016,98 +1259,34 @@ const AthleteDetail = () => {
         <div className="detail-card">
           <h3>Profile</h3>
           <div className="detail-list">
-            <div className="detail-row">
-              <span>Age</span>
-              <span>{athlete.age} years</span>
-            </div>
-            <div className="detail-row">
-              <span>Weight</span>
-              <span>{athlete.weight} lbs</span>
-            </div>
-            <div className="detail-row">
-              <span>Height</span>
-              <span>{formatHeight(athlete.height)}</span>
-            </div>
-            <div className="detail-row">
-              <span>Activity</span>
-              <span>{ACTIVITY_MULTIPLIERS[athlete.activityLevel]?.label}</span>
-            </div>
-            <div className="detail-row">
-              <span>Goal</span>
-              <span>{GOAL_ADJUSTMENTS[athlete.goal]?.label}</span>
-            </div>
+            <div className="detail-row"><span>Age</span><span>{athlete.age} years</span></div>
+            <div className="detail-row"><span>Weight</span><span>{athlete.weight} lbs</span></div>
+            <div className="detail-row"><span>Height</span><span>{formatHeight(athlete.height)}</span></div>
+            <div className="detail-row"><span>Activity</span><span>{ACTIVITY_MULTIPLIERS[athlete.activityLevel]?.label}</span></div>
+            <div className="detail-row"><span>Goal</span><span>{GOAL_ADJUSTMENTS[athlete.goal]?.label}</span></div>
           </div>
         </div>
         
         <div className="detail-card">
           <h3>Daily Targets</h3>
           <div className="targets-grid">
-            <div className="target-box">
-              <span className="target-value">{athlete.targets?.calories}</span>
-              <span className="target-label">Calories</span>
-            </div>
-            <div className="target-box">
-              <span className="target-value">{athlete.targets?.protein}g</span>
-              <span className="target-label">Protein</span>
-            </div>
-            <div className="target-box">
-              <span className="target-value">{athlete.targets?.carbs}g</span>
-              <span className="target-label">Carbs</span>
-            </div>
-            <div className="target-box">
-              <span className="target-value">{athlete.targets?.fat}g</span>
-              <span className="target-label">Fat</span>
-            </div>
+            <div className="target-box"><span className="target-value">{athlete.targets?.calories}</span><span className="target-label">Calories</span></div>
+            <div className="target-box"><span className="target-value">{athlete.targets?.protein}g</span><span className="target-label">Protein</span></div>
+            <div className="target-box"><span className="target-value">{athlete.targets?.carbs}g</span><span className="target-label">Carbs</span></div>
+            <div className="target-box"><span className="target-value">{athlete.targets?.fat}g</span><span className="target-label">Fat</span></div>
           </div>
-        </div>
-        
-        {(athlete.preferences || athlete.restrictions) && (
-          <div className="detail-card full-width">
-            <h3>Food Notes</h3>
-            {athlete.preferences && (
-              <p><strong>Loves:</strong> {athlete.preferences}</p>
-            )}
-            {athlete.restrictions && (
-              <p><strong>Restrictions:</strong> {athlete.restrictions}</p>
-            )}
-          </div>
-        )}
-        
-        <div className="detail-card full-width">
-          <h3>Meal Plans ({athletePlans.length})</h3>
-          {athletePlans.length === 0 ? (
-            <div className="empty-state small">
-              <p>No meal plans yet</p>
-              <button className="btn btn-primary" onClick={() => navigate(`/builder?athlete=${id}`)}>
-                Create First Plan
-              </button>
-            </div>
-          ) : (
-            <div className="plans-list">
-              {athletePlans.map(plan => (
-                <div key={plan.id} className="plan-row">
-                  <span>Created {new Date(plan.created_at).toLocaleDateString()}</span>
-                  <button className="btn btn-small" onClick={() => navigate(`/builder?plan=${plan.id}`)}>
-                    Edit
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
         </div>
       </div>
       
       <div className="danger-zone">
-        <button className="btn btn-danger" onClick={handleDelete}>
-          Delete Athlete
-        </button>
+        <button className="btn btn-danger" onClick={handleDelete}>Delete Athlete</button>
       </div>
     </div>
   );
 };
 
 // ============================================
-// PLAN BUILDER PAGE
+// PLAN BUILDER PAGE (simplified for space)
 // ============================================
 const PlanBuilder = () => {
   const { athletes, mealPlans, addMealPlan, updateMealPlan } = useApp();
@@ -1127,14 +1306,7 @@ const PlanBuilder = () => {
   
   const selectedAthlete = athletes.find(a => a.id === selectedAthleteId);
   
-  const emptyDay = {
-    breakfast: [],
-    snack1: [],
-    lunch: [],
-    snack2: [],
-    dinner: [],
-    evening: [],
-  };
+  const emptyDay = { breakfast: [], snack1: [], lunch: [], snack2: [], dinner: [], evening: [] };
   
   const [plan, setPlan] = useState({
     athlete_id: athleteIdParam || '',
@@ -1154,11 +1326,7 @@ const PlanBuilder = () => {
   
   useEffect(() => {
     if (selectedAthlete) {
-      setPlan(prev => ({
-        ...prev,
-        athlete_id: selectedAthlete.id,
-        targets: selectedAthlete.targets,
-      }));
+      setPlan(prev => ({ ...prev, athlete_id: selectedAthlete.id, targets: selectedAthlete.targets }));
     }
   }, [selectedAthlete]);
   
@@ -1177,30 +1345,18 @@ const PlanBuilder = () => {
   
   const addFoodToMeal = (food, quantity = 1) => {
     if (currentMealSlot === null) return;
-    
     const newPlan = { ...plan };
-    newPlan.days[selectedDay][currentMealSlot].push({
-      id: Date.now().toString(),
-      foodId: food.id,
-      food: food,
-      quantity: quantity,
-    });
+    newPlan.days[selectedDay][currentMealSlot].push({ id: Date.now().toString(), foodId: food.id, food: food, quantity: quantity });
     setPlan(newPlan);
     setShowFoodPicker(false);
   };
   
   const addSavedMealToSlot = (savedMeal) => {
     if (currentMealSlot === null) return;
-    
     const newPlan = { ...plan };
     savedMeal.items.forEach(item => {
       const food = getFoodById(item.foodId);
-      newPlan.days[selectedDay][currentMealSlot].push({
-        id: Date.now().toString() + Math.random(),
-        foodId: item.foodId,
-        food: food,
-        quantity: item.quantity,
-      });
+      newPlan.days[selectedDay][currentMealSlot].push({ id: Date.now().toString() + Math.random(), foodId: item.foodId, food: food, quantity: item.quantity });
     });
     setPlan(newPlan);
     setShowMealPicker(false);
@@ -1226,19 +1382,12 @@ const PlanBuilder = () => {
   };
   
   const savePlan = () => {
-    if (planIdParam) {
-      updateMealPlan(planIdParam, plan);
-    } else {
-      addMealPlan(plan);
-    }
+    if (planIdParam) { updateMealPlan(planIdParam, plan); } else { addMealPlan(plan); }
     alert('Plan saved!');
   };
   
   const exportPDF = () => {
-    if (!selectedAthlete) {
-      alert('Please select an athlete first');
-      return;
-    }
+    if (!selectedAthlete) { alert('Please select an athlete first'); return; }
     downloadMealPlanPDF(selectedAthlete, plan);
   };
   
@@ -1250,15 +1399,9 @@ const PlanBuilder = () => {
       <div className="page-header">
         <h1 className="page-title">Meal Plan Builder</h1>
         <div className="header-actions">
-          <select 
-            value={selectedAthleteId} 
-            onChange={e => setSelectedAthleteId(e.target.value)}
-            className="athlete-select"
-          >
+          <select value={selectedAthleteId} onChange={e => setSelectedAthleteId(e.target.value)} className="athlete-select">
             <option value="">Select Athlete...</option>
-            {athletes.map(a => (
-              <option key={a.id} value={a.id}>{a.name} ({a.sport})</option>
-            ))}
+            {athletes.map(a => (<option key={a.id} value={a.id}>{a.name} ({a.sport})</option>))}
           </select>
           <button className="btn btn-secondary" onClick={savePlan}>Save Plan</button>
           <button className="btn btn-primary" onClick={exportPDF}>Export PDF</button>
@@ -1269,10 +1412,7 @@ const PlanBuilder = () => {
         <div className="empty-state">
           <div className="empty-icon">📋</div>
           <h3>Select an athlete to start building</h3>
-          <p>Choose an athlete from the dropdown above, or create a new one first.</p>
-          <button className="btn btn-primary" onClick={() => navigate('/athletes/new')}>
-            Add New Athlete
-          </button>
+          <button className="btn btn-primary" onClick={() => navigate('/athletes/new')}>Add New Athlete</button>
         </div>
       ) : (
         <>
@@ -1294,15 +1434,10 @@ const PlanBuilder = () => {
                   <div key={macro.label} className="macro-bar-item">
                     <div className="macro-bar-header">
                       <span className="macro-bar-label">{macro.label}</span>
-                      <span className={`macro-bar-values ${status}`}>
-                        {macro.actual}{macro.unit} / {macro.target}{macro.unit}
-                      </span>
+                      <span className={`macro-bar-values ${status}`}>{macro.actual}{macro.unit} / {macro.target}{macro.unit}</span>
                     </div>
                     <div className="macro-bar-track">
-                      <div 
-                        className={`macro-bar-fill ${status}`} 
-                        style={{ width: `${Math.min(pct, 100)}%`, backgroundColor: macro.color }}
-                      />
+                      <div className={`macro-bar-fill ${status}`} style={{ width: `${Math.min(pct, 100)}%`, backgroundColor: macro.color }} />
                     </div>
                   </div>
                 );
@@ -1315,19 +1450,13 @@ const PlanBuilder = () => {
               const dayMacros = calculateDayMacros(plan.days[idx]);
               const hasContent = dayMacros.calories > 0;
               return (
-                <button
-                  key={idx}
-                  onClick={() => setSelectedDay(idx)}
-                  className={`day-btn ${selectedDay === idx ? 'active' : ''}`}
-                >
+                <button key={idx} onClick={() => setSelectedDay(idx)} className={`day-btn ${selectedDay === idx ? 'active' : ''}`}>
                   <span>{day}</span>
                   {hasContent && <small>{dayMacros.calories} cal</small>}
                 </button>
               );
             })}
-            <button className="day-btn copy-btn" onClick={copyDayToAll}>
-              Copy to All
-            </button>
+            <button className="day-btn copy-btn" onClick={copyDayToAll}>Copy to All</button>
           </div>
           
           <div className="meal-slots">
@@ -1339,38 +1468,16 @@ const PlanBuilder = () => {
                   <div className="meal-slot-header">
                     <span className="meal-slot-name">{slot.label}</span>
                     <div className="meal-slot-actions">
-                      {items.length > 0 && (
-                        <span className="meal-slot-macros">
-                          {mealMacros.calories} cal | {Math.round(mealMacros.protein)}P
-                        </span>
-                      )}
-                      <button 
-                        className="btn btn-small btn-outline"
-                        onClick={() => { setCurrentMealSlot(slot.key); setShowMealPicker(true); }}
-                      >
-                        + Saved
-                      </button>
-                      <button 
-                        className="btn btn-small btn-primary"
-                        onClick={() => { setCurrentMealSlot(slot.key); setShowFoodPicker(true); }}
-                      >
-                        + Food
-                      </button>
+                      {items.length > 0 && <span className="meal-slot-macros">{mealMacros.calories} cal | {Math.round(mealMacros.protein)}P</span>}
+                      <button className="btn btn-small btn-outline" onClick={() => { setCurrentMealSlot(slot.key); setShowMealPicker(true); }}>+ Saved</button>
+                      <button className="btn btn-small btn-primary" onClick={() => { setCurrentMealSlot(slot.key); setShowFoodPicker(true); }}>+ Food</button>
                     </div>
                   </div>
-                  
                   {items.length > 0 && (
                     <div className="meal-slot-items">
                       {items.map((item, idx) => (
                         <div key={item.id} className="meal-item">
-                          <input
-                            type="number"
-                            value={item.quantity}
-                            onChange={e => updateItemQuantity(slot.key, idx, e.target.value)}
-                            className="quantity-input"
-                            step="0.25"
-                            min="0"
-                          />
+                          <input type="number" value={item.quantity} onChange={e => updateItemQuantity(slot.key, idx, e.target.value)} className="quantity-input" step="0.25" min="0" />
                           <span className="item-unit">{item.food.unit}</span>
                           <span className="item-name">{item.food.name}</span>
                           <span className="item-calories">{calculateItemMacros(item).calories} cal</span>
@@ -1394,33 +1501,19 @@ const PlanBuilder = () => {
               <button className="close-btn" onClick={() => setShowFoodPicker(false)}>×</button>
             </div>
             <div className="modal-search">
-              <input
-                type="text"
-                placeholder="Search foods..."
-                value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
-                autoFocus
-              />
+              <input type="text" placeholder="Search foods..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} autoFocus />
               <select value={selectedCategory} onChange={e => setSelectedCategory(e.target.value)}>
-                {FOOD_CATEGORIES.map(cat => (
-                  <option key={cat.id} value={cat.id}>{cat.name}</option>
-                ))}
+                {FOOD_CATEGORIES.map(cat => (<option key={cat.id} value={cat.id}>{cat.name}</option>))}
               </select>
             </div>
             <div className="modal-list">
               {filteredFoods.map(food => (
-                <div
-                  key={food.id}
-                  className="food-picker-item"
-                  onClick={() => addFoodToMeal(food, 1)}
-                >
+                <div key={food.id} className="food-picker-item" onClick={() => addFoodToMeal(food, 1)}>
                   <div className="food-picker-info">
                     <span className="food-picker-name">{food.name}</span>
                     <span className="food-picker-unit">per {food.unit}</span>
                   </div>
-                  <span className="food-picker-macros">
-                    {food.calories} cal | {food.protein}P | {food.carbs}C | {food.fat}F
-                  </span>
+                  <span className="food-picker-macros">{food.calories} cal | {food.protein}P | {food.carbs}C | {food.fat}F</span>
                 </div>
               ))}
             </div>
@@ -1439,18 +1532,12 @@ const PlanBuilder = () => {
               {mealTemplates.map(meal => {
                 const macros = calculateMealMacros(meal.items);
                 return (
-                  <div
-                    key={meal.id}
-                    className="meal-picker-item"
-                    onClick={() => addSavedMealToSlot(meal)}
-                  >
+                  <div key={meal.id} className="meal-picker-item" onClick={() => addSavedMealToSlot(meal)}>
                     <div className="meal-picker-info">
                       <span className="meal-picker-name">{meal.name}</span>
                       <span className="meal-picker-desc">{meal.items.length} items</span>
                     </div>
-                    <span className="meal-picker-macros">
-                      {macros.calories} cal | {Math.round(macros.protein)}P
-                    </span>
+                    <span className="meal-picker-macros">{macros.calories} cal | {Math.round(macros.protein)}P</span>
                   </div>
                 );
               })}
@@ -1471,8 +1558,6 @@ const SavedMeals = () => {
   return (
     <div className="page">
       <h1 className="page-title">Saved Meal Templates</h1>
-      <p className="page-subtitle">Pre-built meals you can quickly add to any plan</p>
-      
       <div className="meals-grid">
         {mealTemplates.map(meal => {
           const macros = calculateMealMacros(meal.items);
@@ -1480,18 +1565,9 @@ const SavedMeals = () => {
             <div key={meal.id} className="meal-card">
               <h3>{meal.name}</h3>
               <p className="meal-description">{meal.description}</p>
-              <div className="meal-items">
-                {meal.items.map((item, idx) => (
-                  <div key={idx} className="meal-item-preview">
-                    • {item.quantity} {item.food?.unit} {item.food?.name}
-                  </div>
-                ))}
-              </div>
               <div className="meal-card-macros">
                 <span>{macros.calories} cal</span>
                 <span>{Math.round(macros.protein)}g P</span>
-                <span>{Math.round(macros.carbs)}g C</span>
-                <span>{Math.round(macros.fat)}g F</span>
               </div>
             </div>
           );
@@ -1516,32 +1592,15 @@ const FoodDatabase = () => {
       <p className="page-subtitle">USDA-verified nutrition data for {ALL_FOODS.length} foods</p>
       
       <div className="search-filters">
-        <input
-          type="text"
-          placeholder="Search foods..."
-          value={searchTerm}
-          onChange={e => setSearchTerm(e.target.value)}
-          className="search-input"
-        />
-        <select 
-          value={selectedCategory} 
-          onChange={e => setSelectedCategory(e.target.value)}
-          className="category-select"
-        >
-          {FOOD_CATEGORIES.map(cat => (
-            <option key={cat.id} value={cat.id}>{cat.name}</option>
-          ))}
+        <input type="text" placeholder="Search foods..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="search-input" />
+        <select value={selectedCategory} onChange={e => setSelectedCategory(e.target.value)} className="category-select">
+          {FOOD_CATEGORIES.map(cat => (<option key={cat.id} value={cat.id}>{cat.name}</option>))}
         </select>
       </div>
       
       <div className="food-table">
         <div className="food-table-header">
-          <span>Food</span>
-          <span>Unit</span>
-          <span>Cal</span>
-          <span>P</span>
-          <span>C</span>
-          <span>F</span>
+          <span>Food</span><span>Unit</span><span>Cal</span><span>P</span><span>C</span><span>F</span>
         </div>
         <div className="food-table-body">
           {filteredFoods.map((food, idx) => (
@@ -1561,83 +1620,53 @@ const FoodDatabase = () => {
 };
 
 // ============================================
-// ADMIN APP WRAPPER (with header/nav)
+// ADMIN APP WRAPPER
 // ============================================
 const AdminApp = () => {
   const [athletes, setAthletes] = useState([]);
   const [mealPlans, setMealPlans] = useState([]);
   const [intakeCounts, setIntakeCounts] = useState({ total: 0, new: 0, contacted: 0, converted: 0 });
+  const [swapCounts, setSwapCounts] = useState({ total: 0, new: 0, completed: 0 });
   
   useEffect(() => {
     setAthletes(localDB.getAthletes());
     setMealPlans(localDB.getMealPlans());
-    loadIntakeCounts();
+    loadCounts();
   }, []);
 
-  const loadIntakeCounts = async () => {
+  const loadCounts = async () => {
     try {
-      const counts = await getIntakeFormsCounts();
-      setIntakeCounts(counts);
+      const intakes = await getIntakeFormsCounts();
+      setIntakeCounts(intakes);
+      const swaps = await getSwapRequestsCounts();
+      setSwapCounts(swaps);
     } catch (err) {
-      console.error('Error loading intake counts:', err);
+      console.error('Error loading counts:', err);
     }
   };
   
-  const addAthlete = (athleteData) => {
-    const newAthlete = localDB.addAthlete(athleteData);
-    setAthletes(localDB.getAthletes());
-    return newAthlete;
-  };
+  const addAthlete = (athleteData) => { const newAthlete = localDB.addAthlete(athleteData); setAthletes(localDB.getAthletes()); return newAthlete; };
+  const updateAthlete = (id, updates) => { localDB.updateAthlete(id, updates); setAthletes(localDB.getAthletes()); };
+  const deleteAthlete = (id) => { localDB.deleteAthlete(id); setAthletes(localDB.getAthletes()); };
+  const addMealPlan = (planData) => { const newPlan = localDB.addMealPlan(planData); setMealPlans(localDB.getMealPlans()); return newPlan; };
+  const updateMealPlan = (id, updates) => { localDB.updateMealPlan(id, updates); setMealPlans(localDB.getMealPlans()); };
+  const deleteMealPlan = (id) => { localDB.deleteMealPlan(id); setMealPlans(localDB.getMealPlans()); };
   
-  const updateAthlete = (id, updates) => {
-    localDB.updateAthlete(id, updates);
-    setAthletes(localDB.getAthletes());
-  };
-  
-  const deleteAthlete = (id) => {
-    localDB.deleteAthlete(id);
-    setAthletes(localDB.getAthletes());
-  };
-  
-  const addMealPlan = (planData) => {
-    const newPlan = localDB.addMealPlan(planData);
-    setMealPlans(localDB.getMealPlans());
-    return newPlan;
-  };
-  
-  const updateMealPlan = (id, updates) => {
-    localDB.updateMealPlan(id, updates);
-    setMealPlans(localDB.getMealPlans());
-  };
-  
-  const deleteMealPlan = (id) => {
-    localDB.deleteMealPlan(id);
-    setMealPlans(localDB.getMealPlans());
-  };
-  
-  const contextValue = {
-    athletes,
-    mealPlans,
-    addAthlete,
-    updateAthlete,
-    deleteAthlete,
-    addMealPlan,
-    updateMealPlan,
-    deleteMealPlan,
-  };
+  const contextValue = { athletes, mealPlans, addAthlete, updateAthlete, deleteAthlete, addMealPlan, updateMealPlan, deleteMealPlan };
   
   return (
     <AppContext.Provider value={contextValue}>
       <div className="app">
-        <Header intakeCount={intakeCounts.new} />
+        <Header intakeCount={intakeCounts.new} swapCount={swapCounts.new} />
         <main className="main">
           <Routes>
-            <Route path="/" element={<Dashboard intakeCounts={intakeCounts} />} />
+            <Route path="/" element={<Dashboard intakeCounts={intakeCounts} swapCounts={swapCounts} />} />
             <Route path="/athletes" element={<AthletesList />} />
             <Route path="/athletes/new" element={<AthleteForm />} />
             <Route path="/athletes/:id" element={<AthleteDetail />} />
             <Route path="/athletes/:id/edit" element={<AthleteForm />} />
-            <Route path="/intakes" element={<IntakesPage onRefreshCounts={loadIntakeCounts} />} />
+            <Route path="/intakes" element={<IntakesPage onRefreshCounts={loadCounts} />} />
+            <Route path="/swaps-admin" element={<SwapsPage onRefreshCounts={loadCounts} />} />
             <Route path="/builder" element={<PlanBuilder />} />
             <Route path="/meals" element={<SavedMeals />} />
             <Route path="/foods" element={<FoodDatabase />} />
@@ -1649,15 +1678,15 @@ const AdminApp = () => {
 };
 
 // ============================================
-// MAIN APP - Routes to either Intake or Admin
+// MAIN APP
 // ============================================
 function App() {
-  // If on public intake page, render just the form (no header/nav)
   if (window.location.pathname === '/intake') {
     return <IntakeForm />;
   }
-  
-  // Otherwise render the full admin app
+  if (window.location.pathname === '/swaps') {
+    return <SwapForm />;
+  }
   return (
     <BrowserRouter>
       <AdminApp />
