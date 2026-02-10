@@ -10,6 +10,10 @@ const supabase = supabaseUrl && supabaseAnonKey
 
 export const isSupabaseConfigured = () => !!supabase;
 
+// ============================================
+// INTAKE FORMS
+// ============================================
+
 // Submit intake form (public)
 export const submitIntakeForm = async (formData) => {
   if (!supabase) {
@@ -87,6 +91,93 @@ export const deleteIntakeForm = async (id) => {
   
   const { error } = await supabase
     .from('intake_forms')
+    .delete()
+    .eq('id', id);
+  
+  if (error) throw error;
+  return true;
+};
+
+// ============================================
+// SWAP REQUESTS
+// ============================================
+
+// Submit swap request (public)
+export const submitSwapRequest = async (formData) => {
+  if (!supabase) {
+    throw new Error('Supabase not configured');
+  }
+  
+  const { data, error } = await supabase
+    .from('swap_requests')
+    .insert([{ ...formData, status: 'new' }])
+    .select();
+  
+  if (error) throw error;
+  return data;
+};
+
+// Get all swap requests (admin)
+export const getSwapRequests = async () => {
+  if (!supabase) {
+    console.warn('Supabase not configured');
+    return [];
+  }
+  
+  const { data, error } = await supabase
+    .from('swap_requests')
+    .select('*')
+    .order('created_at', { ascending: false });
+  
+  if (error) throw error;
+  return data || [];
+};
+
+// Get swap requests count by status
+export const getSwapRequestsCounts = async () => {
+  if (!supabase) {
+    return { total: 0, new: 0, completed: 0 };
+  }
+  
+  const { data, error } = await supabase
+    .from('swap_requests')
+    .select('status');
+  
+  if (error) throw error;
+  
+  const counts = {
+    total: data?.length || 0,
+    new: data?.filter(d => d.status === 'new' || !d.status).length || 0,
+    completed: data?.filter(d => d.status === 'completed').length || 0
+  };
+  
+  return counts;
+};
+
+// Update swap request status
+export const updateSwapRequestStatus = async (id, status) => {
+  if (!supabase) {
+    throw new Error('Supabase not configured');
+  }
+  
+  const { data, error } = await supabase
+    .from('swap_requests')
+    .update({ status })
+    .eq('id', id)
+    .select();
+  
+  if (error) throw error;
+  return data;
+};
+
+// Delete swap request
+export const deleteSwapRequest = async (id) => {
+  if (!supabase) {
+    throw new Error('Supabase not configured');
+  }
+  
+  const { error } = await supabase
+    .from('swap_requests')
     .delete()
     .eq('id', id);
   
