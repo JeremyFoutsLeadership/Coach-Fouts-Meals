@@ -1,37 +1,53 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { submitIntakeForm } from '../lib/supabase';
 
-const PROTEINS = [
-  'Chicken Breast', 'Chicken Thighs', 'Ground Beef', 'Steak', 'Pork Chops',
-  'Turkey', 'Ham', 'Bacon', 'Salmon', 'Tilapia', 'Shrimp', 'Eggs',
-  'Greek Yogurt', 'Cottage Cheese', 'Beef Jerky', 'Deli Meat'
+// BMR/TDEE Calculation using Mifflin-St Jeor
+const calculateBMR = (gender, weightLbs, heightFeet, heightInches, age) => {
+  if (!weightLbs || !heightFeet || !age || !gender) return null;
+  
+  const weightKg = weightLbs * 0.45359237;
+  const heightCm = ((heightFeet * 12) + (heightInches || 0)) * 2.54;
+  
+  if (gender === 'male') {
+    return Math.round(10 * weightKg + 6.25 * heightCm - 5 * age + 5);
+  } else {
+    return Math.round(10 * weightKg + 6.25 * heightCm - 5 * age - 161);
+  }
+};
+
+const calculateTDEE = (bmr, activityLevel) => {
+  if (!bmr || !activityLevel) return null;
+  const multipliers = {
+    'sedentary': 1.2,
+    'light': 1.375,
+    'moderate': 1.55,
+    'very_active': 1.725,
+    'extra_active': 1.9
+  };
+  return Math.round(bmr * (multipliers[activityLevel] || 1.55));
+};
+
+const ACTIVITY_LEVELS = [
+  { value: 'sedentary', label: 'Sedentary', desc: 'Little/no exercise, desk job' },
+  { value: 'light', label: 'Lightly Active', desc: 'Light exercise 1-3 days/week' },
+  { value: 'moderate', label: 'Moderately Active', desc: 'Moderate exercise 3-5 days/week' },
+  { value: 'very_active', label: 'Very Active', desc: 'Hard exercise 6-7 days/week' },
+  { value: 'extra_active', label: 'Extra Active', desc: 'Very hard exercise + physical job' },
 ];
 
-const CARBS = [
-  'White Rice', 'Brown Rice', 'Pasta', 'Bread', 'Tortillas', 'Oatmeal',
-  'Potatoes', 'Sweet Potatoes', 'Quinoa', 'Bagels', 'Cereal', 'Pancakes',
-  'Waffles', 'Grits', 'Crackers', 'Pretzels'
-];
-
-const FRUITS = [
-  'Bananas', 'Apples', 'Oranges', 'Strawberries', 'Blueberries', 'Grapes',
-  'Watermelon', 'Pineapple', 'Mango', 'Peaches', 'Cantaloupe', 'Kiwi'
-];
-
-const VEGETABLES = [
-  'Broccoli', 'Green Beans', 'Corn', 'Carrots', 'Spinach', 'Lettuce',
-  'Bell Peppers', 'Asparagus', 'Peas', 'Zucchini', 'Cucumbers', 'Tomatoes'
-];
-
-const SPORTS = [
-  'Baseball', 'Basketball', 'Football', 'Soccer', 'Softball', 'Wrestling',
-  'Track & Field', 'Swimming', 'Tennis', 'Golf', 'Volleyball', 'Other'
-];
+const PROTEINS = ['Chicken Breast', 'Ground Beef (93/7)', 'Steak', 'Turkey', 'Eggs', 'Egg Whites', 'Salmon', 'Tilapia', 'Shrimp', 'Tuna', 'Pork Chops', 'Bacon', 'Deli Meat', 'Greek Yogurt', 'Cottage Cheese'];
+const CARBS = ['White Rice', 'Brown Rice', 'Pasta', 'Bread', 'Oatmeal', 'Cream of Rice', 'Potatoes', 'Sweet Potatoes', 'Bagels', 'Tortillas', 'Cereal', 'Pancakes', 'Waffles', 'Grits', 'Quinoa'];
+const FRUITS = ['Bananas', 'Apples', 'Oranges', 'Strawberries', 'Blueberries', 'Grapes', 'Watermelon', 'Pineapple', 'Mango', 'Raspberries', 'Blackberries', 'Peaches', 'Pears'];
+const VEGETABLES = ['Broccoli', 'Green Beans', 'Spinach', 'Asparagus', 'Carrots', 'Bell Peppers', 'Zucchini', 'Cucumber', 'Tomatoes', 'Lettuce', 'Corn', 'Peas', 'Brussels Sprouts', 'Cauliflower'];
+const ALLERGIES = ['Dairy', 'Eggs', 'Peanuts', 'Tree Nuts', 'Soy', 'Wheat/Gluten', 'Fish', 'Shellfish'];
+const DIETARY_RESTRICTIONS = ['Vegetarian', 'Vegan', 'Gluten-Free', 'Dairy-Free', 'Keto', 'Halal', 'Kosher'];
 
 export default function IntakeForm() {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [calculatedBMR, setCalculatedBMR] = useState(null);
+  const [calculatedTDEE, setCalculatedTDEE] = useState(null);
   
   const [form, setForm] = useState({
     athlete_name: '',
@@ -39,31 +55,50 @@ export default function IntakeForm() {
     email: '',
     phone: '',
     age: '',
+    gender: '',
     sport: '',
     position: '',
     current_weight: '',
     goal_weight: '',
     height_feet: '',
     height_inches: '',
-    primary_goal: 'gain',
+    activity_level: 'moderate',
+    primary_goal: '',
     timeline: '',
     proteins_liked: [],
-    proteins_disliked: [],
     carbs_liked: [],
-    carbs_disliked: [],
     fruits_liked: [],
     vegetables_liked: [],
+    foods_to_avoid: '',
     allergies: [],
     dietary_restrictions: [],
-    foods_to_avoid: '',
-    meals_per_day: 6,
+    meals_per_day: '5',
+    meal_prep_help: '',
+    has_microwave_at_school: false,
     cooks_own_meals: false,
-    has_microwave_at_school: true,
-    meal_prep_help: 'some',
     grocery_budget: '',
     current_supplements: '',
     notes: ''
   });
+
+  // Live BMR/TDEE calculation
+  useEffect(() => {
+    const bmr = calculateBMR(
+      form.gender,
+      parseFloat(form.current_weight),
+      parseInt(form.height_feet),
+      parseInt(form.height_inches) || 0,
+      parseInt(form.age)
+    );
+    setCalculatedBMR(bmr);
+    
+    if (bmr) {
+      const tdee = calculateTDEE(bmr, form.activity_level);
+      setCalculatedTDEE(tdee);
+    } else {
+      setCalculatedTDEE(null);
+    }
+  }, [form.gender, form.current_weight, form.height_feet, form.height_inches, form.age, form.activity_level]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -73,12 +108,12 @@ export default function IntakeForm() {
     }));
   };
 
-  const toggleArrayItem = (field, item) => {
+  const handleMultiSelect = (field, value) => {
     setForm(prev => ({
       ...prev,
-      [field]: prev[field].includes(item)
-        ? prev[field].filter(i => i !== item)
-        : [...prev[field], item]
+      [field]: prev[field].includes(value)
+        ? prev[field].filter(v => v !== value)
+        : [...prev[field], value]
     }));
   };
 
@@ -90,14 +125,15 @@ export default function IntakeForm() {
     try {
       const submissionData = {
         ...form,
-        age: form.age ? parseInt(form.age) : null,
-        current_weight: form.current_weight ? parseFloat(form.current_weight) : null,
-        goal_weight: form.goal_weight ? parseFloat(form.goal_weight) : null,
-        height_feet: form.height_feet ? parseInt(form.height_feet) : null,
-        height_inches: form.height_inches ? parseInt(form.height_inches) : null,
-        meals_per_day: parseInt(form.meals_per_day)
+        age: parseInt(form.age) || null,
+        current_weight: parseFloat(form.current_weight) || null,
+        goal_weight: parseFloat(form.goal_weight) || null,
+        height_feet: parseInt(form.height_feet) || null,
+        height_inches: parseInt(form.height_inches) || 0,
+        bmr: calculatedBMR,
+        tdee: calculatedTDEE
       };
-
+      
       await submitIntakeForm(submissionData);
       setSubmitted(true);
     } catch (err) {
@@ -110,17 +146,16 @@ export default function IntakeForm() {
 
   if (submitted) {
     return (
-      <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-        <div style={{ background: 'white', borderRadius: '16px', padding: '40px', maxWidth: '500px', textAlign: 'center', boxShadow: '0 25px 50px rgba(0,0,0,0.25)' }}>
-          <div style={{ fontSize: '64px', marginBottom: '16px' }}>✅</div>
-          <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#1f2937', marginBottom: '8px' }}>You're All Set!</h1>
-          <p style={{ color: '#6b7280', marginBottom: '24px' }}>
-            Thanks for submitting your intake form. Coach Fouts will review your information 
-            and reach out within 24-48 hours to discuss your personalized nutrition plan.
+      <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #065f46 0%, #059669 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+        <div style={{ background: 'white', borderRadius: '16px', padding: '48px', maxWidth: '500px', textAlign: 'center', boxShadow: '0 25px 50px rgba(0,0,0,0.25)' }}>
+          <div style={{ fontSize: '72px', marginBottom: '24px' }}>🎉</div>
+          <h1 style={{ fontSize: '28px', fontWeight: 'bold', color: '#1f2937', marginBottom: '16px' }}>You're All Set!</h1>
+          <p style={{ color: '#6b7280', fontSize: '16px', marginBottom: '24px', lineHeight: '1.6' }}>
+            Thank you for completing the intake form! Coach Fouts will review your information and reach out within 24-48 hours with your personalized meal plan.
           </p>
           <a 
             href="https://jeremyfouts.com" 
-            style={{ display: 'inline-block', background: '#2563eb', color: 'white', padding: '12px 24px', borderRadius: '8px', fontWeight: '600', textDecoration: 'none' }}
+            style={{ display: 'inline-block', background: '#059669', color: 'white', padding: '14px 28px', borderRadius: '8px', fontWeight: '600', textDecoration: 'none', fontSize: '16px' }}
           >
             Back to JeremyFouts.com
           </a>
@@ -129,13 +164,12 @@ export default function IntakeForm() {
     );
   }
 
-  const inputStyle = {
-    width: '100%',
-    padding: '10px 16px',
-    border: '1px solid #d1d5db',
-    borderRadius: '8px',
-    fontSize: '16px',
-    boxSizing: 'border-box'
+  const sectionStyle = {
+    background: 'white',
+    borderRadius: '12px',
+    padding: '24px',
+    marginBottom: '20px',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
   };
 
   const labelStyle = {
@@ -143,272 +177,350 @@ export default function IntakeForm() {
     fontSize: '14px',
     fontWeight: '600',
     color: '#374151',
-    marginBottom: '4px'
+    marginBottom: '6px'
   };
 
-  const sectionHeaderStyle = {
-    background: '#2563eb',
-    color: 'white',
-    padding: '16px 24px',
-    fontSize: '20px',
-    fontWeight: 'bold'
+  const inputStyle = {
+    width: '100%',
+    padding: '12px 16px',
+    border: '2px solid #e5e7eb',
+    borderRadius: '8px',
+    fontSize: '16px',
+    transition: 'border-color 0.2s',
+    boxSizing: 'border-box'
   };
 
-  const checkboxContainerStyle = {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
-    gap: '8px'
-  };
-
-  const checkboxLabelStyle = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    cursor: 'pointer',
-    color: '#1f2937'
-  };
-
-  const checkboxTextStyle = {
+  const chipStyle = (selected) => ({
+    display: 'inline-block',
+    padding: '8px 16px',
+    margin: '4px',
+    borderRadius: '20px',
     fontSize: '14px',
-    color: '#1f2937'
-  };
+    cursor: 'pointer',
+    transition: 'all 0.2s',
+    border: '2px solid',
+    borderColor: selected ? '#059669' : '#e5e7eb',
+    background: selected ? '#ecfdf5' : 'white',
+    color: selected ? '#059669' : '#6b7280'
+  });
 
   return (
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%)', padding: '32px 16px' }}>
+    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #065f46 0%, #059669 100%)', padding: '40px 16px' }}>
       <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+        {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <h1 style={{ fontSize: '32px', fontWeight: 'bold', color: 'white', marginBottom: '8px' }}>
-            🏆 Athlete Nutrition Intake Form
+          <h1 style={{ fontSize: '36px', fontWeight: 'bold', color: 'white', marginBottom: '8px' }}>
+            🏆 Athlete Nutrition Intake
           </h1>
-          <p style={{ color: '#bfdbfe' }}>
+          <p style={{ color: '#a7f3d0', fontSize: '18px' }}>
             Coach Fouts Sports Nutrition | NCSF Certified
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} style={{ background: 'white', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 25px 50px rgba(0,0,0,0.25)' }}>
-          
-          {/* Section 1: Basic Info */}
-          <div style={sectionHeaderStyle}>1. Basic Information</div>
-          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <form onSubmit={handleSubmit}>
+          {/* Contact Info */}
+          <div style={sectionStyle}>
+            <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: '#059669', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              📋 Contact Information
+            </h2>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
               <div>
                 <label style={labelStyle}>Athlete Name *</label>
-                <input type="text" name="athlete_name" value={form.athlete_name} onChange={handleChange} required style={inputStyle} placeholder="First and Last Name" />
+                <input name="athlete_name" value={form.athlete_name} onChange={handleChange} required style={inputStyle} placeholder="John Smith" />
               </div>
               <div>
                 <label style={labelStyle}>Parent/Guardian Name</label>
-                <input type="text" name="parent_name" value={form.parent_name} onChange={handleChange} style={inputStyle} placeholder="Parent Name" />
+                <input name="parent_name" value={form.parent_name} onChange={handleChange} style={inputStyle} placeholder="Jane Smith" />
               </div>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
               <div>
                 <label style={labelStyle}>Email *</label>
-                <input type="email" name="email" value={form.email} onChange={handleChange} required style={inputStyle} placeholder="email@example.com" />
+                <input name="email" type="email" value={form.email} onChange={handleChange} required style={inputStyle} placeholder="email@example.com" />
               </div>
               <div>
-                <label style={labelStyle}>Phone Number</label>
-                <input type="tel" name="phone" value={form.phone} onChange={handleChange} style={inputStyle} placeholder="(555) 555-5555" />
+                <label style={labelStyle}>Phone</label>
+                <input name="phone" type="tel" value={form.phone} onChange={handleChange} style={inputStyle} placeholder="(555) 123-4567" />
               </div>
             </div>
+          </div>
 
+          {/* Physical Stats */}
+          <div style={sectionStyle}>
+            <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: '#059669', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              📊 Physical Stats
+            </h2>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
               <div>
                 <label style={labelStyle}>Age *</label>
-                <input type="number" name="age" value={form.age} onChange={handleChange} required min="8" max="25" style={inputStyle} placeholder="Age" />
+                <input name="age" type="number" value={form.age} onChange={handleChange} required style={inputStyle} placeholder="15" min="8" max="25" />
+              </div>
+              <div>
+                <label style={labelStyle}>Gender *</label>
+                <select name="gender" value={form.gender} onChange={handleChange} required style={inputStyle}>
+                  <option value="">Select...</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                </select>
               </div>
               <div>
                 <label style={labelStyle}>Sport *</label>
-                <select name="sport" value={form.sport} onChange={handleChange} required style={inputStyle}>
-                  <option value="">Select Sport</option>
-                  {SPORTS.map(sport => <option key={sport} value={sport}>{sport}</option>)}
-                </select>
+                <input name="sport" value={form.sport} onChange={handleChange} required style={inputStyle} placeholder="Football" />
               </div>
               <div>
                 <label style={labelStyle}>Position</label>
-                <input type="text" name="position" value={form.position} onChange={handleChange} style={inputStyle} placeholder="e.g., Pitcher, QB" />
+                <input name="position" value={form.position} onChange={handleChange} style={inputStyle} placeholder="Quarterback" />
               </div>
-            </div>
-          </div>
-
-          {/* Section 2: Physical Stats */}
-          <div style={sectionHeaderStyle}>2. Physical Stats & Goals</div>
-          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
               <div>
                 <label style={labelStyle}>Current Weight (lbs) *</label>
-                <input type="number" name="current_weight" value={form.current_weight} onChange={handleChange} required style={inputStyle} placeholder="e.g., 150" />
+                <input name="current_weight" type="number" value={form.current_weight} onChange={handleChange} required style={inputStyle} placeholder="165" />
               </div>
               <div>
                 <label style={labelStyle}>Goal Weight (lbs)</label>
-                <input type="number" name="goal_weight" value={form.goal_weight} onChange={handleChange} style={inputStyle} placeholder="e.g., 170" />
+                <input name="goal_weight" type="number" value={form.goal_weight} onChange={handleChange} style={inputStyle} placeholder="175" />
+              </div>
+              <div>
+                <label style={labelStyle}>Height (ft) *</label>
+                <input name="height_feet" type="number" value={form.height_feet} onChange={handleChange} required style={inputStyle} placeholder="5" min="3" max="7" />
+              </div>
+              <div>
+                <label style={labelStyle}>Height (in)</label>
+                <input name="height_inches" type="number" value={form.height_inches} onChange={handleChange} style={inputStyle} placeholder="10" min="0" max="11" />
+              </div>
+              <div>
+                <label style={labelStyle}>Activity Level *</label>
+                <select name="activity_level" value={form.activity_level} onChange={handleChange} required style={inputStyle}>
+                  {ACTIVITY_LEVELS.map(level => (
+                    <option key={level.value} value={level.value}>{level.label}</option>
+                  ))}
+                </select>
               </div>
             </div>
+            
+            {/* Activity Level Description */}
+            <div style={{ marginTop: '12px', padding: '12px', background: '#f3f4f6', borderRadius: '8px', fontSize: '13px', color: '#6b7280' }}>
+              {ACTIVITY_LEVELS.find(l => l.value === form.activity_level)?.desc || 'Select activity level'}
+            </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-              <div>
-                <label style={labelStyle}>Height</label>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <input type="number" name="height_feet" value={form.height_feet} onChange={handleChange} min="4" max="7" style={inputStyle} placeholder="Feet" />
-                  <input type="number" name="height_inches" value={form.height_inches} onChange={handleChange} min="0" max="11" style={inputStyle} placeholder="Inches" />
+            {/* Live BMR/TDEE Display */}
+            {calculatedBMR && (
+              <div style={{ 
+                marginTop: '20px', 
+                padding: '20px', 
+                background: 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)', 
+                borderRadius: '12px',
+                border: '2px solid #059669'
+              }}>
+                <h3 style={{ fontSize: '16px', fontWeight: 'bold', color: '#059669', marginBottom: '16px', textAlign: 'center' }}>
+                  📈 Calculated Metabolic Stats
+                </h3>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <div style={{ textAlign: 'center', padding: '16px', background: 'white', borderRadius: '8px' }}>
+                    <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '4px' }}>BMR (Base Metabolic Rate)</div>
+                    <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#059669' }}>{calculatedBMR.toLocaleString()}</div>
+                    <div style={{ fontSize: '12px', color: '#9ca3af' }}>calories/day at rest</div>
+                  </div>
+                  <div style={{ textAlign: 'center', padding: '16px', background: 'white', borderRadius: '8px' }}>
+                    <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '4px' }}>TDEE (Total Daily Energy)</div>
+                    <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#059669' }}>{calculatedTDEE?.toLocaleString() || '—'}</div>
+                    <div style={{ fontSize: '12px', color: '#9ca3af' }}>calories/day with activity</div>
+                  </div>
                 </div>
               </div>
+            )}
+          </div>
+
+          {/* Goals */}
+          <div style={sectionStyle}>
+            <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: '#059669', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              🎯 Goals
+            </h2>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
               <div>
                 <label style={labelStyle}>Primary Goal *</label>
                 <select name="primary_goal" value={form.primary_goal} onChange={handleChange} required style={inputStyle}>
-                  <option value="gain">Gain Weight / Build Muscle</option>
-                  <option value="lose">Lose Weight / Cut Fat</option>
-                  <option value="maintain">Maintain Weight</option>
-                  <option value="performance">Improve Performance</option>
+                  <option value="">Select a goal...</option>
+                  <option value="Build Muscle & Gain Weight">Build Muscle & Gain Weight</option>
+                  <option value="Lose Fat & Get Lean">Lose Fat & Get Lean</option>
+                  <option value="Improve Performance">Improve Performance</option>
+                  <option value="Maintain Current Weight">Maintain Current Weight</option>
+                  <option value="Overall Health & Energy">Overall Health & Energy</option>
+                </select>
+              </div>
+              <div>
+                <label style={labelStyle}>Timeline</label>
+                <select name="timeline" value={form.timeline} onChange={handleChange} style={inputStyle}>
+                  <option value="">Select timeline...</option>
+                  <option value="1-2 months">1-2 months</option>
+                  <option value="3-4 months">3-4 months</option>
+                  <option value="6+ months">6+ months</option>
+                  <option value="Ongoing">Ongoing</option>
                 </select>
               </div>
             </div>
+          </div>
+
+          {/* Food Preferences */}
+          <div style={sectionStyle}>
+            <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: '#059669', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              🍽️ Food Preferences
+            </h2>
+            <p style={{ color: '#6b7280', marginBottom: '20px', fontSize: '14px' }}>
+              Select all the foods you enjoy eating. This helps us build a meal plan you'll actually follow!
+            </p>
+            
+            <div style={{ marginBottom: '24px' }}>
+              <label style={{ ...labelStyle, marginBottom: '12px' }}>Proteins You Like</label>
+              <div style={{ display: 'flex', flexWrap: 'wrap' }}>
+                {PROTEINS.map(item => (
+                  <span key={item} onClick={() => handleMultiSelect('proteins_liked', item)} style={chipStyle(form.proteins_liked.includes(item))}>
+                    {item}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ marginBottom: '24px' }}>
+              <label style={{ ...labelStyle, marginBottom: '12px' }}>Carbs You Like</label>
+              <div style={{ display: 'flex', flexWrap: 'wrap' }}>
+                {CARBS.map(item => (
+                  <span key={item} onClick={() => handleMultiSelect('carbs_liked', item)} style={chipStyle(form.carbs_liked.includes(item))}>
+                    {item}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ marginBottom: '24px' }}>
+              <label style={{ ...labelStyle, marginBottom: '12px' }}>Fruits You Like</label>
+              <div style={{ display: 'flex', flexWrap: 'wrap' }}>
+                {FRUITS.map(item => (
+                  <span key={item} onClick={() => handleMultiSelect('fruits_liked', item)} style={chipStyle(form.fruits_liked.includes(item))}>
+                    {item}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ marginBottom: '24px' }}>
+              <label style={{ ...labelStyle, marginBottom: '12px' }}>Vegetables You Like</label>
+              <div style={{ display: 'flex', flexWrap: 'wrap' }}>
+                {VEGETABLES.map(item => (
+                  <span key={item} onClick={() => handleMultiSelect('vegetables_liked', item)} style={chipStyle(form.vegetables_liked.includes(item))}>
+                    {item}
+                  </span>
+                ))}
+              </div>
+            </div>
 
             <div>
-              <label style={labelStyle}>Timeline / Upcoming Season</label>
-              <input type="text" name="timeline" value={form.timeline} onChange={handleChange} style={inputStyle} placeholder="e.g., Spring baseball starts March 1st" />
+              <label style={labelStyle}>Foods to AVOID (allergies, dislikes, won't eat)</label>
+              <textarea 
+                name="foods_to_avoid" 
+                value={form.foods_to_avoid} 
+                onChange={handleChange} 
+                style={{ ...inputStyle, minHeight: '80px', resize: 'vertical' }} 
+                placeholder="List any foods you absolutely won't eat..."
+              />
             </div>
           </div>
 
-          {/* Section 3: Food Preferences */}
-          <div style={sectionHeaderStyle}>3. Food Preferences (Check all you LIKE)</div>
-          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
-            <div>
-              <label style={{ ...labelStyle, marginBottom: '8px' }}>Proteins I Like ✓</label>
-              <div style={checkboxContainerStyle}>
-                {PROTEINS.map(protein => (
-                  <label key={protein} style={checkboxLabelStyle}>
-                    <input type="checkbox" checked={form.proteins_liked.includes(protein)} onChange={() => toggleArrayItem('proteins_liked', protein)} />
-                    <span style={checkboxTextStyle}>{protein}</span>
-                  </label>
+          {/* Allergies & Restrictions */}
+          <div style={sectionStyle}>
+            <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: '#059669', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              ⚠️ Allergies & Dietary Restrictions
+            </h2>
+            
+            <div style={{ marginBottom: '24px' }}>
+              <label style={{ ...labelStyle, marginBottom: '12px' }}>Food Allergies</label>
+              <div style={{ display: 'flex', flexWrap: 'wrap' }}>
+                {ALLERGIES.map(item => (
+                  <span key={item} onClick={() => handleMultiSelect('allergies', item)} style={chipStyle(form.allergies.includes(item))}>
+                    {item}
+                  </span>
                 ))}
               </div>
             </div>
 
             <div>
-              <label style={{ ...labelStyle, marginBottom: '8px' }}>Carbs I Like ✓</label>
-              <div style={checkboxContainerStyle}>
-                {CARBS.map(carb => (
-                  <label key={carb} style={checkboxLabelStyle}>
-                    <input type="checkbox" checked={form.carbs_liked.includes(carb)} onChange={() => toggleArrayItem('carbs_liked', carb)} />
-                    <span style={checkboxTextStyle}>{carb}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <label style={{ ...labelStyle, marginBottom: '8px' }}>Fruits I Like ✓</label>
-              <div style={checkboxContainerStyle}>
-                {FRUITS.map(fruit => (
-                  <label key={fruit} style={checkboxLabelStyle}>
-                    <input type="checkbox" checked={form.fruits_liked.includes(fruit)} onChange={() => toggleArrayItem('fruits_liked', fruit)} />
-                    <span style={checkboxTextStyle}>{fruit}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <label style={{ ...labelStyle, marginBottom: '8px' }}>Vegetables I Like ✓</label>
-              <div style={checkboxContainerStyle}>
-                {VEGETABLES.map(veg => (
-                  <label key={veg} style={checkboxLabelStyle}>
-                    <input type="checkbox" checked={form.vegetables_liked.includes(veg)} onChange={() => toggleArrayItem('vegetables_liked', veg)} />
-                    <span style={checkboxTextStyle}>{veg}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <label style={labelStyle}>Foods You Absolutely WON'T Eat</label>
-              <textarea name="foods_to_avoid" value={form.foods_to_avoid} onChange={handleChange} rows={2} style={{ ...inputStyle, resize: 'vertical' }} placeholder="List any foods you refuse to eat..." />
-            </div>
-          </div>
-
-          {/* Section 4: Restrictions */}
-          <div style={sectionHeaderStyle}>4. Allergies & Restrictions</div>
-          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div>
-              <label style={{ ...labelStyle, marginBottom: '8px' }}>Food Allergies</label>
-              <div style={checkboxContainerStyle}>
-                {['Peanuts', 'Tree Nuts', 'Dairy', 'Eggs', 'Shellfish', 'Fish', 'Wheat/Gluten', 'Soy'].map(allergy => (
-                  <label key={allergy} style={checkboxLabelStyle}>
-                    <input type="checkbox" checked={form.allergies.includes(allergy)} onChange={() => toggleArrayItem('allergies', allergy)} />
-                    <span style={checkboxTextStyle}>{allergy}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <label style={{ ...labelStyle, marginBottom: '8px' }}>Dietary Restrictions</label>
-              <div style={checkboxContainerStyle}>
-                {['Gluten-Free', 'Dairy-Free', 'Vegetarian', 'No Pork', 'No Red Meat', 'Kosher'].map(restriction => (
-                  <label key={restriction} style={checkboxLabelStyle}>
-                    <input type="checkbox" checked={form.dietary_restrictions.includes(restriction)} onChange={() => toggleArrayItem('dietary_restrictions', restriction)} />
-                    <span style={checkboxTextStyle}>{restriction}</span>
-                  </label>
+              <label style={{ ...labelStyle, marginBottom: '12px' }}>Dietary Restrictions</label>
+              <div style={{ display: 'flex', flexWrap: 'wrap' }}>
+                {DIETARY_RESTRICTIONS.map(item => (
+                  <span key={item} onClick={() => handleMultiSelect('dietary_restrictions', item)} style={chipStyle(form.dietary_restrictions.includes(item))}>
+                    {item}
+                  </span>
                 ))}
               </div>
             </div>
           </div>
 
-          {/* Section 5: Logistics */}
-          <div style={sectionHeaderStyle}>5. Meal Logistics</div>
-          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {/* Meal Logistics */}
+          <div style={sectionStyle}>
+            <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: '#059669', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              🍳 Meal Logistics
+            </h2>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
               <div>
-                <label style={labelStyle}>Meals Per Day</label>
-                <select name="meals_per_day" value={form.meals_per_day} onChange={handleChange} style={inputStyle}>
-                  <option value={4}>4 (Breakfast, Lunch, Dinner, Snack)</option>
-                  <option value={5}>5 (+ After School Snack)</option>
-                  <option value={6}>6 (+ Evening Shake) - Recommended</option>
+                <label style={labelStyle}>Meals Per Day *</label>
+                <select name="meals_per_day" value={form.meals_per_day} onChange={handleChange} required style={inputStyle}>
+                  <option value="3">3 meals</option>
+                  <option value="4">4 meals</option>
+                  <option value="5">5 meals</option>
+                  <option value="6">6 meals</option>
                 </select>
               </div>
               <div>
-                <label style={labelStyle}>Meal Prep Help at Home</label>
+                <label style={labelStyle}>Who helps with meal prep?</label>
                 <select name="meal_prep_help" value={form.meal_prep_help} onChange={handleChange} style={inputStyle}>
-                  <option value="none">None - I prep everything myself</option>
-                  <option value="some">Some - Parents help with some meals</option>
-                  <option value="full">Full - Parents prepare most meals</option>
+                  <option value="">Select...</option>
+                  <option value="I do it myself">I do it myself</option>
+                  <option value="Parent/Guardian">Parent/Guardian</option>
+                  <option value="Both">Both</option>
+                  <option value="Other family member">Other family member</option>
                 </select>
               </div>
+              <div>
+                <label style={labelStyle}>Grocery Budget (weekly)</label>
+                <select name="grocery_budget" value={form.grocery_budget} onChange={handleChange} style={inputStyle}>
+                  <option value="">Select...</option>
+                  <option value="Under $100">Under $100</option>
+                  <option value="$100-150">$100-150</option>
+                  <option value="$150-200">$150-200</option>
+                  <option value="$200+">$200+</option>
+                  <option value="No limit">No limit</option>
+                </select>
+              </div>
+              <div>
+                <label style={labelStyle}>Current Supplements</label>
+                <input name="current_supplements" value={form.current_supplements} onChange={handleChange} style={inputStyle} placeholder="Protein powder, creatine, etc." />
+              </div>
             </div>
-
-            <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
-              <label style={checkboxLabelStyle}>
-                <input type="checkbox" name="has_microwave_at_school" checked={form.has_microwave_at_school} onChange={handleChange} />
-                <span style={checkboxTextStyle}>Microwave available at school</span>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginTop: '16px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', padding: '12px', background: '#f9fafb', borderRadius: '8px' }}>
+                <input type="checkbox" name="has_microwave_at_school" checked={form.has_microwave_at_school} onChange={handleChange} style={{ width: '20px', height: '20px' }} />
+                <span style={{ color: '#374151' }}>Has microwave access at school</span>
               </label>
-              <label style={checkboxLabelStyle}>
-                <input type="checkbox" name="cooks_own_meals" checked={form.cooks_own_meals} onChange={handleChange} />
-                <span style={checkboxTextStyle}>Athlete cooks their own meals</span>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', padding: '12px', background: '#f9fafb', borderRadius: '8px' }}>
+                <input type="checkbox" name="cooks_own_meals" checked={form.cooks_own_meals} onChange={handleChange} style={{ width: '20px', height: '20px' }} />
+                <span style={{ color: '#374151' }}>Cooks own meals</span>
               </label>
-            </div>
-
-            <div>
-              <label style={labelStyle}>Weekly Grocery Budget (optional)</label>
-              <input type="text" name="grocery_budget" value={form.grocery_budget} onChange={handleChange} style={inputStyle} placeholder="e.g., $150/week" />
             </div>
           </div>
 
-          {/* Section 6: Additional */}
-          <div style={sectionHeaderStyle}>6. Additional Information</div>
-          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div>
-              <label style={labelStyle}>Current Supplements (if any)</label>
-              <input type="text" name="current_supplements" value={form.current_supplements} onChange={handleChange} style={inputStyle} placeholder="e.g., Protein powder, creatine, multivitamin" />
-            </div>
-            <div>
-              <label style={labelStyle}>Anything Else Coach Fouts Should Know?</label>
-              <textarea name="notes" value={form.notes} onChange={handleChange} rows={3} style={{ ...inputStyle, resize: 'vertical' }} placeholder="Medical conditions, schedule constraints, picky eater, etc." />
-            </div>
+          {/* Additional Notes */}
+          <div style={sectionStyle}>
+            <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: '#059669', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              📝 Additional Notes
+            </h2>
+            <textarea 
+              name="notes" 
+              value={form.notes} 
+              onChange={handleChange} 
+              style={{ ...inputStyle, minHeight: '120px', resize: 'vertical' }} 
+              placeholder="Anything else Coach Fouts should know? Training schedule, upcoming events, specific concerns..."
+            />
           </div>
 
           {/* Submit */}
-          <div style={{ padding: '24px', background: '#f9fafb', borderTop: '1px solid #e5e7eb' }}>
+          <div style={{ background: 'white', borderRadius: '12px', padding: '24px', textAlign: 'center' }}>
             {error && (
               <div style={{ marginBottom: '16px', padding: '16px', background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', borderRadius: '8px' }}>
                 {error}
@@ -419,25 +531,28 @@ export default function IntakeForm() {
               disabled={loading}
               style={{
                 width: '100%',
-                background: loading ? '#9ca3af' : '#2563eb',
+                maxWidth: '400px',
+                background: loading ? '#9ca3af' : 'linear-gradient(135deg, #059669 0%, #047857 100%)',
                 color: 'white',
-                padding: '16px',
-                borderRadius: '8px',
+                padding: '18px 32px',
+                borderRadius: '12px',
                 fontWeight: 'bold',
                 fontSize: '18px',
                 border: 'none',
-                cursor: loading ? 'not-allowed' : 'pointer'
+                cursor: loading ? 'not-allowed' : 'pointer',
+                boxShadow: '0 4px 12px rgba(5, 150, 105, 0.4)'
               }}
             >
               {loading ? 'Submitting...' : '🚀 Submit Intake Form'}
             </button>
-            <p style={{ textAlign: 'center', fontSize: '14px', color: '#6b7280', marginTop: '16px' }}>
-              By submitting, you agree to be contacted by Coach Fouts Sports Nutrition.
+            <p style={{ marginTop: '16px', color: '#6b7280', fontSize: '14px' }}>
+              Coach Fouts will review and contact you within 24-48 hours.
             </p>
           </div>
         </form>
 
-        <div style={{ textAlign: 'center', marginTop: '32px', color: '#bfdbfe', fontSize: '14px' }}>
+        {/* Footer */}
+        <div style={{ textAlign: 'center', marginTop: '32px', color: '#a7f3d0', fontSize: '14px' }}>
           <p>Coach Fouts Sports Nutrition | NCSF Certified</p>
           <p>JeremyFouts.com</p>
         </div>
