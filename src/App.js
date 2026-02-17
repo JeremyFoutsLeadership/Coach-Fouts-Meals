@@ -271,6 +271,17 @@ const IntakesPage = ({ onRefreshCounts }) => {
     }
   };
 
+  const getActivityLabel = (level) => {
+    const labels = {
+      'sedentary': 'Sedentary (little/no exercise)',
+      'light': 'Lightly Active (1-3 days/week)',
+      'moderate': 'Moderately Active (3-5 days/week)',
+      'very_active': 'Very Active (6-7 days/week)',
+      'extra_active': 'Extra Active (very hard exercise + physical job)'
+    };
+    return labels[level] || level || 'Not specified';
+  };
+
   const generateClaudeText = (s) => {
     const heightStr = s.height_feet && s.height_inches !== null 
       ? `${s.height_feet}'${s.height_inches}"` 
@@ -284,6 +295,7 @@ Parent/Guardian: ${s.parent_name || 'N/A'}
 Email: ${s.email}
 Phone: ${s.phone || 'N/A'}
 Age: ${s.age}
+Gender: ${s.gender || 'Not specified'}
 Sport: ${s.sport}
 Position: ${s.position || 'N/A'}
 
@@ -291,8 +303,13 @@ Position: ${s.position || 'N/A'}
 Current Weight: ${s.current_weight} lbs
 Goal Weight: ${s.goal_weight || 'Not specified'} lbs
 Height: ${heightStr}
+Activity Level: ${getActivityLabel(s.activity_level)}
 Primary Goal: ${s.primary_goal}
 Timeline: ${s.timeline || 'Not specified'}
+
+=== CALCULATED TARGETS ===
+BMR (Basal Metabolic Rate): ${s.bmr ? s.bmr.toLocaleString() + ' kcal/day' : 'Not calculated'}
+TDEE (Total Daily Energy Expenditure): ${s.tdee ? s.tdee.toLocaleString() + ' kcal/day' : 'Not calculated'}
 
 === FOOD PREFERENCES ===
 Proteins Liked: ${s.proteins_liked?.join(', ') || 'None selected'}
@@ -565,15 +582,36 @@ Please create a personalized 7-day meal plan for this athlete with:
               <h3 style={{ color: '#94a3b8', fontSize: '12px', textTransform: 'uppercase', marginBottom: '12px' }}>Physical Stats</h3>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', color: 'white' }}>
                 <div><strong>Age:</strong> {selectedSubmission.age}</div>
+                <div><strong>Gender:</strong> {selectedSubmission.gender || 'N/A'}</div>
                 <div><strong>Sport:</strong> {selectedSubmission.sport}</div>
                 <div><strong>Position:</strong> {selectedSubmission.position || 'N/A'}</div>
                 <div><strong>Current Weight:</strong> {selectedSubmission.current_weight} lbs</div>
                 <div><strong>Goal Weight:</strong> {selectedSubmission.goal_weight || 'N/A'} lbs</div>
                 <div><strong>Height:</strong> {selectedSubmission.height_feet}'{selectedSubmission.height_inches}"</div>
+                <div><strong>Activity Level:</strong> {selectedSubmission.activity_level || 'N/A'}</div>
                 <div><strong>Primary Goal:</strong> {selectedSubmission.primary_goal}</div>
                 <div><strong>Timeline:</strong> {selectedSubmission.timeline || 'N/A'}</div>
               </div>
             </div>
+
+            {/* BMR/TDEE Section */}
+            {(selectedSubmission.bmr || selectedSubmission.tdee) && (
+              <div style={{ background: 'linear-gradient(135deg, #065f46, #059669)', borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
+                <h3 style={{ color: '#a7f3d0', fontSize: '12px', textTransform: 'uppercase', marginBottom: '12px' }}>📈 Calculated Metabolic Stats</h3>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <div style={{ background: 'rgba(255,255,255,0.1)', borderRadius: '8px', padding: '16px', textAlign: 'center' }}>
+                    <div style={{ color: '#a7f3d0', fontSize: '12px', marginBottom: '4px' }}>BMR (Base Metabolic Rate)</div>
+                    <div style={{ color: 'white', fontSize: '28px', fontWeight: 'bold' }}>{selectedSubmission.bmr?.toLocaleString() || '—'}</div>
+                    <div style={{ color: '#6ee7b7', fontSize: '11px' }}>kcal/day at rest</div>
+                  </div>
+                  <div style={{ background: 'rgba(255,255,255,0.1)', borderRadius: '8px', padding: '16px', textAlign: 'center' }}>
+                    <div style={{ color: '#a7f3d0', fontSize: '12px', marginBottom: '4px' }}>TDEE (Total Daily Energy)</div>
+                    <div style={{ color: 'white', fontSize: '28px', fontWeight: 'bold' }}>{selectedSubmission.tdee?.toLocaleString() || '—'}</div>
+                    <div style={{ color: '#6ee7b7', fontSize: '11px' }}>kcal/day with activity</div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div style={{ background: '#334155', borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
               <h3 style={{ color: '#94a3b8', fontSize: '12px', textTransform: 'uppercase', marginBottom: '12px' }}>Food Preferences</h3>
