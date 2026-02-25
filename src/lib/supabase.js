@@ -1,4 +1,4 @@
-// Force redeploy - connected to zhynybhdubywfrbnnmow
+// Fixed - using intake_submissions table
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
@@ -10,24 +10,23 @@ const supabase = supabaseUrl && supabaseAnonKey
 
 export const isSupabaseConfigured = () => !!supabase;
 
-// INTAKE FORMS
 export const submitIntakeForm = async (formData) => {
   if (!supabase) throw new Error('Supabase not configured');
-  const { data, error } = await supabase.from('intake_forms').insert([{ ...formData, status: 'new' }]).select();
+  const { data, error } = await supabase.from('intake_submissions').insert([{ ...formData, status: 'new' }]).select();
   if (error) throw error;
   return data;
 };
 
 export const getIntakeForms = async () => {
   if (!supabase) return [];
-  const { data, error } = await supabase.from('intake_forms').select('*').order('created_at', { ascending: false });
+  const { data, error } = await supabase.from('intake_submissions').select('*').order('created_at', { ascending: false });
   if (error) throw error;
   return data || [];
 };
 
 export const getIntakeFormsCounts = async () => {
   if (!supabase) return { total: 0, new: 0, contacted: 0, converted: 0 };
-  const { data, error } = await supabase.from('intake_forms').select('status');
+  const { data, error } = await supabase.from('intake_submissions').select('status');
   if (error) throw error;
   return {
     total: data?.length || 0,
@@ -39,36 +38,35 @@ export const getIntakeFormsCounts = async () => {
 
 export const updateIntakeFormStatus = async (id, status) => {
   if (!supabase) throw new Error('Supabase not configured');
-  const { data, error } = await supabase.from('intake_forms').update({ status }).eq('id', id).select();
+  const { data, error } = await supabase.from('intake_submissions').update({ status }).eq('id', id).select();
   if (error) throw error;
   return data;
 };
 
 export const deleteIntakeForm = async (id) => {
   if (!supabase) throw new Error('Supabase not configured');
-  const { error } = await supabase.from('intake_forms').delete().eq('id', id);
+  const { error } = await supabase.from('intake_submissions').delete().eq('id', id);
   if (error) throw error;
   return true;
 };
 
-// SWAP REQUESTS
 export const submitSwapRequest = async (formData) => {
   if (!supabase) throw new Error('Supabase not configured');
-  const { data, error } = await supabase.from('swap_requests').insert([{ ...formData, status: 'new' }]).select();
+  const { data, error } = await supabase.from('swap_request').insert([{ ...formData, status: 'new' }]).select();
   if (error) throw error;
   return data;
 };
 
 export const getSwapRequests = async () => {
   if (!supabase) return [];
-  const { data, error } = await supabase.from('swap_requests').select('*').order('created_at', { ascending: false });
+  const { data, error } = await supabase.from('swap_request').select('*').order('created_at', { ascending: false });
   if (error) throw error;
   return data || [];
 };
 
 export const getSwapRequestsCounts = async () => {
   if (!supabase) return { total: 0, new: 0, completed: 0 };
-  const { data, error } = await supabase.from('swap_requests').select('status');
+  const { data, error } = await supabase.from('swap_request').select('status');
   if (error) throw error;
   return {
     total: data?.length || 0,
@@ -79,14 +77,14 @@ export const getSwapRequestsCounts = async () => {
 
 export const updateSwapRequestStatus = async (id, status) => {
   if (!supabase) throw new Error('Supabase not configured');
-  const { data, error } = await supabase.from('swap_requests').update({ status }).eq('id', id).select();
+  const { data, error } = await supabase.from('swap_request').update({ status }).eq('id', id).select();
   if (error) throw error;
   return data;
 };
 
 export const deleteSwapRequest = async (id) => {
   if (!supabase) throw new Error('Supabase not configured');
-  const { error } = await supabase.from('swap_requests').delete().eq('id', id);
+  const { error } = await supabase.from('swap_request').delete().eq('id', id);
   if (error) throw error;
   return true;
 };
