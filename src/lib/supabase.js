@@ -12,21 +12,21 @@ export const isSupabaseConfigured = () => !!supabase;
 // INTAKE FORMS
 export const submitIntakeForm = async (formData) => {
   if (!supabase) throw new Error('Supabase not configured');
-  const { data, error } = await supabase.from('intake_submissions').insert([{ ...formData, status: 'new' }]).select();
+  const { data, error } = await supabase.from('intake_forms').insert([{ ...formData, status: 'new' }]).select();
   if (error) throw error;
   return data;
 };
 
 export const getIntakeForms = async () => {
   if (!supabase) return [];
-  const { data, error } = await supabase.from('intake_submissions').select('*').order('created_at', { ascending: false });
+  const { data, error } = await supabase.from('intake_forms').select('*').order('created_at', { ascending: false });
   if (error) throw error;
   return data || [];
 };
 
 export const getIntakeFormsCounts = async () => {
   if (!supabase) return { total: 0, new: 0, contacted: 0, converted: 0 };
-  const { data, error } = await supabase.from('intake_submissions').select('status');
+  const { data, error } = await supabase.from('intake_forms').select('status');
   if (error) throw error;
   return {
     total: data?.length || 0,
@@ -38,14 +38,14 @@ export const getIntakeFormsCounts = async () => {
 
 export const updateIntakeFormStatus = async (id, status) => {
   if (!supabase) throw new Error('Supabase not configured');
-  const { data, error } = await supabase.from('intake_submissions').update({ status }).eq('id', id).select();
+  const { data, error } = await supabase.from('intake_forms').update({ status }).eq('id', id).select();
   if (error) throw error;
   return data;
 };
 
 export const deleteIntakeForm = async (id) => {
   if (!supabase) throw new Error('Supabase not configured');
-  const { error } = await supabase.from('intake_submissions').delete().eq('id', id);
+  const { error } = await supabase.from('intake_forms').delete().eq('id', id);
   if (error) throw error;
   return true;
 };
