@@ -66,27 +66,4 @@ export const getSwapRequests = async () => {
 
 export const getSwapRequestsCounts = async () => {
   if (!supabase) return { total: 0, new: 0, completed: 0 };
-  const { data, error } = await supabase.from('swap_request').select('status');
-  if (error) throw error;
-  return {
-    total: data?.length || 0,
-    new: data?.filter(d => d.status === 'new' || !d.status).length || 0,
-    completed: data?.filter(d => d.status === 'completed').length || 0
-  };
-};
-
-export const updateSwapRequestStatus = async (id, status) => {
-  if (!supabase) throw new Error('Supabase not configured');
-  const { data, error } = await supabase.from('swap_request').update({ status }).eq('id', id).select();
-  if (error) throw error;
-  return data;
-};
-
-export const deleteSwapRequest = async (id) => {
-  if (!supabase) throw new Error('Supabase not configured');
-  const { error } = await supabase.from('swap_request').delete().eq('id', id);
-  if (error) throw error;
-  return true;
-};
-
-export default supabase;
+  const { data, error } = await supabase.from('swap_req
